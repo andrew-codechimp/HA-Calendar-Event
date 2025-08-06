@@ -1,0 +1,12 @@
+{
+    "entity": {
+        "binary_sensor": {
+            "calendar_event": {
+                "default": "mdi:calendar-blank",
+                "state": {
+                    "on": "mdi:calendar-check"
+                }
+            }
+        }
+    }
+}

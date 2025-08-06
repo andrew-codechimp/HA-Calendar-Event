@@ -6,7 +6,6 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -28,7 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize Calendar Event config entry."""
 
-    name: str | None = config_entry.data.get("name")
+    name: str | None = config_entry.options.get("name")
     calendar_entity: str = config_entry.options[CONF_CALENDAR_ENTITY_ID]
     summary: str = config_entry.options[CONF_SUMMARY]
     unique_id = config_entry.entry_id
@@ -54,8 +53,9 @@ async def async_setup_entry(
 class CalendarEventBinarySensor(BinarySensorEntity):
     """Representation of a Calendar Event sensor."""
 
-    _attr_icon = "mdi:tag"
     _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_translation_key = "calendar_event"
 
     _state_dict: dict[str, str] = {}
 
@@ -88,12 +88,6 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             self._hass.bus.async_listen(
                 EVENT_STATE_CHANGED, self._calendar_state_changed
             )
-        )
-
-        # Add entity registry listener for entity ID changes
-        entity_registry = er.async_get(self._hass)
-        self.async_on_remove(
-            entity_registry.async_listen(self._entity_registry_updated)
         )
 
         # Check initial state

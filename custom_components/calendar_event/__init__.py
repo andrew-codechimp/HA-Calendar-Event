@@ -13,7 +13,6 @@ from homeassistant.const import __version__ as HA_VERSION  # noqa: N812
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
 from homeassistant.helpers.typing import ConfigType
 
@@ -68,16 +67,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             options={**entry.options, CONF_CALENDAR_ENTITY_ID: source_entity_id},
         )
 
+    async def source_entity_removed() -> None:
+        # The source entity has been removed, we remove the config entry because
+        # calendar_event does not allow replacing the wrapped entity.
+        await hass.config_entries.async_remove(entry.entry_id)
+
     entry.async_on_unload(
         async_handle_source_entity_changes(
             hass,
-            add_helper_config_entry_to_device=False,
             helper_config_entry_id=entry.entry_id,
             set_source_entity_id_or_uuid=set_source_entity_id_or_uuid,
-            source_device_id=async_entity_id_to_device_id(
-                hass, entry.options[CONF_CALENDAR_ENTITY_ID]
-            ),
+            source_device_id=None,
             source_entity_id_or_uuid=entry.options[CONF_CALENDAR_ENTITY_ID],
+            source_entity_removed=source_entity_removed,
         )
     )
 
