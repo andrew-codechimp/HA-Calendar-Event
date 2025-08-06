@@ -101,6 +101,8 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
     async def _update_state(self) -> None:
         """Update the binary sensor state based on calendar events."""
+
+        # TODO: Fix this as it does not look at currently active events
         calendar_state = self._hass.states.get(self._calendar_entity_id)
 
         if calendar_state is None:
