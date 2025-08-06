@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_STATE_CHANGED, EVENT_STATE_REPORTED
+from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import (
@@ -93,71 +93,21 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             self._hass.bus.async_listen(EVENT_STATE_CHANGED, self._state_changed)
         )
 
-        # self.async_on_remove(
-        #     async_track_state_report_event(
-        #         self.hass,
-        #         [self._calendar_entity_id],
-        #         self.async_state_reported,
-        #     )
-        # )
-
-        # await self._update_state()
+        await self._update_state()
 
     @callback
     async def _state_changed(self, event: Event) -> None:
         """Handle calendar entity state changes."""
         if event.data.get("entity_id") == self._calendar_entity_id:
+            print(event)
             await self._update_state()
-
-    @callback
-    async def async_state_reported(
-        self, event: Event[EventStateReportedData] | None = None
-    ) -> None:
-        """Handle calendar entity state updates."""
-
-        # This gets fired every minute, but not at startup
-        print(event)
-
-        if event is None or event.data is None:
-            return
-
-        state = event.data.get("new_state")
-
-        if state and state.entity_id != self._calendar_entity_id:
-            return
-
-        if state.state == "off":
-            return
-
-        summary = state.attributes.get("message")
-        if not summary:
-            return
-
-        if self._summary.lower() in str(summary).lower():
-            self._attr_is_on = True
-            self._attr_extra_state_attributes.update(
-                {
-                    ATTR_DESCRIPTION: state.attributes.get("description", ""),
-                }
-            )
-            self.async_write_ha_state()
-            return
-
-        event = await self._get_event_matching_summary()
-        if event:
-            self._attr_is_on = True
-            self._attr_extra_state_attributes.update(
-                {
-                    ATTR_DESCRIPTION: event.get("description", ""),
-                }
-            )
-
-        self.async_write_ha_state()
 
     async def _update_state(self) -> None:
         """Update the binary sensor state based on calendar events."""
 
         calendar_state = self._hass.states.get(self._calendar_entity_id)
+
+        print(calendar_state)
 
         if calendar_state is None:
             self._attr_is_on = False
@@ -169,8 +119,6 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             self.async_write_ha_state()
             return
 
-        # TODO: If state is on, then we need to check every minute in case our event is not the one that turned it on
-
         event = await self._get_event_matching_summary()
         if event:
             self._attr_is_on = True
@@ -179,8 +127,24 @@ class CalendarEventBinarySensor(BinarySensorEntity):
                     ATTR_DESCRIPTION: event.get("description", ""),
                 }
             )
+        else:
+            self._attr_is_on = False
+            self._attr_extra_state_attributes.update(
+                {
+                    ATTR_DESCRIPTION: None,
+                }
+            )
 
         self.async_write_ha_state()
+
+        # TODO: If state is on, then we need to check every minute in case our event is not the one that turned it on
+        if calendar_state.state == "on":
+            now = datetime.now()
+            seconds_until_next_minute = 60 - now.second
+            self._hass.loop.call_later(
+                seconds_until_next_minute,
+                lambda: self._hass.async_create_task(self._update_state()),
+            )
 
     async def _get_event_matching_summary(self) -> Event | None:
         """Check if the summary is in the calendar events."""
