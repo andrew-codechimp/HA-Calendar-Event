@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, EVENT_STATE_REPORTED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -147,7 +147,8 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         # }
 
         # TODO: This will be on if there's an existing event, so we don't get a new event
-        # need to create a polling mechanism to check for new events
+        # need to create a polling mechanism to check for new events, or look at state_reported
+        # https://developers.home-assistant.io/blog/2024/03/20/state_reported_timestamp/
 
         calendar_events = events.get(self._calendar_entity_id, {}).get("events", [])
         for event in calendar_events:
