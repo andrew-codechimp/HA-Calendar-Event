@@ -137,7 +137,6 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         self.async_write_ha_state()
 
-        # TODO: If state is on, then we need to check every minute in case our event is not the one that turned it on
         if calendar_state.state == "on":
             now = datetime.now()
             seconds_until_next_minute = 60 - now.second
