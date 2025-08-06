@@ -25,5 +25,4 @@ PLATFORMS = [Platform.BINARY_SENSOR]
 CONF_CALENDAR_ENTITY = "calendar_entity"
 CONF_SUMMARY = "summary"
 
-ATTR_ENTITIES = "entities"
-ATTR_ENTITY_NAMES = "entity_names"
+ATTR_DESCRIPTION = "description"

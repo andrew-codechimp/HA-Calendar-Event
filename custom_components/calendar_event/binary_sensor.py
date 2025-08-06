@@ -7,8 +7,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
+    EVENT_STATE_CHANGED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -16,7 +17,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
-    ATTR_ENTITIES,
+    ATTR_DESCRIPTION,
     CONF_CALENDAR_ENTITY,
     CONF_SUMMARY,
 )
@@ -102,18 +103,59 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         self._attr_name = name
         self._calendar_entity = calendar_entity
         self._summary = summary
+        self._hass = hass
 
         self._unit_of_measurement_mismatch = False
 
         self._attr_is_on = False
         self._attr_extra_state_attributes = {}
-        self._attr_extra_state_attributes.update(
-            {
-                ATTR_ENTITIES: [],
-            }
-        )
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
-
         await super().async_added_to_hass()
+
+        # Add state listener for the calendar entity
+        self.async_on_remove(
+            self._hass.bus.async_listen(
+                EVENT_STATE_CHANGED, self._calendar_state_changed
+            )
+        )
+
+        # Check initial state
+        await self._update_state()
+
+    @callback
+    async def _calendar_state_changed(self, event: Event) -> None:
+        """Handle calendar entity state changes."""
+        if event.data.get("entity_id") == self._calendar_entity:
+            await self._update_state()
+
+    async def _update_state(self) -> None:
+        """Update the binary sensor state based on calendar events."""
+        calendar_state = self._hass.states.get(self._calendar_entity)
+
+        if calendar_state is None:
+            self._attr_is_on = False
+            self._attr_extra_state_attributes.update(
+                {
+                    ATTR_DESCRIPTION: None,
+                }
+            )
+            self.async_write_ha_state()
+            return
+
+        # Check if the current calendar event's message/summary matches our target summary
+        message = str(calendar_state.attributes.get("message", ""))
+        description = calendar_state.attributes.get("description", "")
+
+        # Set binary sensor to on if the message matches the configured summary
+        self._attr_is_on = self._summary.lower() in message.lower()
+
+        # Update attributes with the description from the calendar entity
+        self._attr_extra_state_attributes.update(
+            {
+                ATTR_DESCRIPTION: description,
+            }
+        )
+
+        self.async_write_ha_state()
