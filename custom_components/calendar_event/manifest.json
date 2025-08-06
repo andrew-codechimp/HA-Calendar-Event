@@ -1,0 +1,14 @@
+{
+  "domain": "calendar_event",
+  "name": "Calendar Event",
+  "codeowners": [
+    "@andrew-codechimp"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/andrew-codechimp/HA-Calendar-Event",
+  "integration_type": "helper",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/andrew-codechimp/HA-Calendar-Event/issues",
+  "requirements": [ ],
+  "version": "1.0.0-dev"
+}
