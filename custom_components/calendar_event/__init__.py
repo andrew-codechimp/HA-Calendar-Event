@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_create_issue(
             hass,
             DOMAIN,
-            f"{ISSUE_MISSING_CALENDAR_ENTITY}_{entry.options[CONF_CALENDAR_ENTITY_ID]}",
+            f"{ISSUE_MISSING_CALENDAR_ENTITY}_{entry.entry_id}",
             is_fixable=True,
             severity=IssueSeverity.ERROR,
             translation_key="missing_calendar_entity",
