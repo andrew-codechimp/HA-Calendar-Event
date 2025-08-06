@@ -9,25 +9,16 @@
 
 Calendar Event Helpers for Home Assistant
 
-You can create state, not state and numeric state helpers which provide a binary sensor that turns on if any entity with an assigned label matches the criteria you specify.
+Allows creation of binary sensor helper that look at the summary of the currently active event for a calendar, turning the sensor on if the summary matches that configured in the helper.
+The description of the calendar event is available as an attribute within the helper.
 
-An `entities` attribute is available which lists all entity id's that match the criteria.  
-An `entity_names` attribute is available which lists either the device (entity) names or just the entity name if the entity is not part of a device, for all entities that match the criteria (useful for notifications).
-
-## Example use cases
-
-- Create a `critical sensors` label and create a State type Calendar Event helper which turns on when any of those entities goes unavailable so you can get a notification.
-- Create a `must be on` label and create a Not State type Calendar Event helper which turns on when any of those entities goes to any state but on so you can get a notification.
-- If you have appliances which should always draw a certain wattage create a Numeric State type Calendar Event helper to turn on when any of those devices starts drawing 0 watts, triggering a notification.
 
 _Please :star: this repo if you find it useful_  
 _If you want to show your support please_
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/codechimp)
 
-![Helper State](https://raw.githubusercontent.com/andrew-codechimp/ha-calendar-event/main/images/calendar_event.png "Helper Calendar Event")
-
-![Helper Numeric](https://raw.githubusercontent.com/andrew-codechimp/ha-calendar-event/main/images/calendar_event_numeric.png "Helper Label Numeric State")
+![Helper Calendar Event](https://raw.githubusercontent.com/andrew-codechimp/ha-calendar-event/main/images/screenshot.png "Helper Calendar Event")
 
 ## Installation
 
@@ -58,36 +49,6 @@ A new Calendar Event helper will be available within Settings/Helpers or click t
 
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=calendar_event)
 
-## Tips & FAQ's
-
-Calendar Event can only monitor labels assigned to entities as it needs to know what entity in particular you want to monitor, since devices have many entities that could be switches/values it cannot automatically determine which you want to monitor. It will ignore labels added to anything but an entity.
-
-Use the example below to create a notification automation listing the entities using the state_attr, replace the binary sensor with your own.  
-I like to have the trigger only activate if a labelled sensor has been unavailable for 5 minutes to avoid any planned restarts falsely triggering the automation.
-
-```
-alias: Critical Sensors Unavailable
-description: "Create a notification if any sensors labelled as critical becomes unavailable for at least 5 minutes"
-triggers:
-  - trigger: state
-    entity_id:
-      - binary_sensor.critical_sensor_unavailable
-    to: "on"
-    for:
-      hours: 0
-      minutes: 5
-      seconds: 0
-conditions: []
-actions:
-  - action: persistent_notification.create
-    metadata: {}
-    data:
-      message: >-
-        Critical sensors are unavailable {{
-        state_attr('binary_sensor.critical_sensor_unavailable', 'entity_names') |
-        join(', ') }}
-mode: single
-```
 
 ### Translations
 
