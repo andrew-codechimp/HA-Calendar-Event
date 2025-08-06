@@ -28,6 +28,7 @@ OPTIONS_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required("name"): selector.TextSelector(),
+        vol.Required("summary"): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
