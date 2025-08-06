@@ -9,12 +9,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_STATE_REPORTED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from .const import (
-    ATTR_DESCRIPTION,
-    CONF_CALENDAR_ENTITY_ID,
-    CONF_SUMMARY,
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    EventStateReportedData,
+    async_track_entity_registry_updated_event,
+    async_track_state_change_event,
+    async_track_state_report_event,
 )
+
+from .const import ATTR_DESCRIPTION, CONF_CALENDAR_ENTITY_ID, CONF_SUMMARY, LOGGER
 
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -87,19 +90,69 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         # Add state listener for the calendar entity
         self.async_on_remove(
-            self._hass.bus.async_listen(
-                EVENT_STATE_CHANGED, self._calendar_state_changed
-            )
+            self._hass.bus.async_listen(EVENT_STATE_CHANGED, self._state_changed)
         )
 
-        # Check initial state
-        await self._update_state()
+        # self.async_on_remove(
+        #     async_track_state_report_event(
+        #         self.hass,
+        #         [self._calendar_entity_id],
+        #         self.async_state_reported,
+        #     )
+        # )
+
+        # await self._update_state()
 
     @callback
-    async def _calendar_state_changed(self, event: Event) -> None:
+    async def _state_changed(self, event: Event) -> None:
         """Handle calendar entity state changes."""
         if event.data.get("entity_id") == self._calendar_entity_id:
             await self._update_state()
+
+    @callback
+    async def async_state_reported(
+        self, event: Event[EventStateReportedData] | None = None
+    ) -> None:
+        """Handle calendar entity state updates."""
+
+        # This gets fired every minute, but not at startup
+        print(event)
+
+        if event is None or event.data is None:
+            return
+
+        state = event.data.get("new_state")
+
+        if state and state.entity_id != self._calendar_entity_id:
+            return
+
+        if state.state == "off":
+            return
+
+        summary = state.attributes.get("message")
+        if not summary:
+            return
+
+        if self._summary.lower() in str(summary).lower():
+            self._attr_is_on = True
+            self._attr_extra_state_attributes.update(
+                {
+                    ATTR_DESCRIPTION: state.attributes.get("description", ""),
+                }
+            )
+            self.async_write_ha_state()
+            return
+
+        event = await self._get_event_matching_summary()
+        if event:
+            self._attr_is_on = True
+            self._attr_extra_state_attributes.update(
+                {
+                    ATTR_DESCRIPTION: event.get("description", ""),
+                }
+            )
+
+        self.async_write_ha_state()
 
     async def _update_state(self) -> None:
         """Update the binary sensor state based on calendar events."""
@@ -116,6 +169,22 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             self.async_write_ha_state()
             return
 
+        # TODO: If state is on, then we need to check every minute in case our event is not the one that turned it on
+
+        event = await self._get_event_matching_summary()
+        if event:
+            self._attr_is_on = True
+            self._attr_extra_state_attributes.update(
+                {
+                    ATTR_DESCRIPTION: event.get("description", ""),
+                }
+            )
+
+        self.async_write_ha_state()
+
+    async def _get_event_matching_summary(self) -> Event | None:
+        """Check if the summary is in the calendar events."""
+
         # Fetch all events for the calendar entity using the get_events service
         now = datetime.now()
         end_date_time = (now + timedelta(hours=1)).isoformat()
@@ -131,45 +200,11 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             return_response=True,
         )
 
-        print(events)
-
-        # {
-        #     "calendar.system": {
-        #         "events": [
-        #             {
-        #                 "start": "2025-08-06T17:00:00+01:00",
-        #                 "end": "2025-08-06T23:00:00+01:00",
-        #                 "summary": "Evening",
-        #                 "description": "It's evening",
-        #             }
-        #         ]
-        #     }
-        # }
-
-        # TODO: This will be on if there's an existing event, so we don't get a new event
-        # need to create a polling mechanism to check for new events, or look at state_reported
-        # https://developers.home-assistant.io/blog/2024/03/20/state_reported_timestamp/
-        # also https://github.com/andrew-codechimp/HA-Battery-Notes/pull/1337/files#diff-1bb5e0ea81eb98dae60348901d92fb42f456eccfb7c47623deca78d325338935
-
         calendar_events = events.get(self._calendar_entity_id, {}).get("events", [])
         for event in calendar_events:
-            # Check if the event summary matches the configured summary (case-insensitive, partial match)
             if not isinstance(event, dict):
                 continue
             if self._summary.lower() in event.get("summary", "").lower():
-                self._attr_is_on = True
-                self._attr_extra_state_attributes.update(
-                    {
-                        ATTR_DESCRIPTION: event.get("description", ""),
-                    }
-                )
-                break
-            else:
-                self._attr_is_on = False
-                self._attr_extra_state_attributes.update(
-                    {
-                        ATTR_DESCRIPTION: None,
-                    }
-                )
+                return event
 
-        self.async_write_ha_state()
+        return None
