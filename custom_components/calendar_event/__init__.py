@@ -14,11 +14,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CALENDAR_ENTITY_ID,
     DOMAIN,
+    ISSUE_MISSING_CALENDAR_ENTITY,
     LOGGER,
     MIN_HA_VERSION,
     PLATFORMS,
@@ -49,29 +55,67 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up calendar_event from a config entry."""
 
     entity_registry = er.async_get(hass)
-    try:
-        entity_id = er.async_validate_entity_id(  # noqa: F841
-            entity_registry, entry.options[CONF_CALENDAR_ENTITY_ID]
+
+    # try:
+    #     entity_id = er.async_validate_entity_id(  # noqa: F841
+    #         entity_registry, entry.options[CONF_CALENDAR_ENTITY_ID]
+
+    if (
+        calendar_entity := entity_registry.entities.get_entry(
+            entry.options[CONF_CALENDAR_ENTITY_ID]
         )
-    except vol.Invalid:
-        # The entity is identified by an unknown entity registry ID
-        LOGGER.error(
-            "Failed to setup calender_event for unknown entity %s",
-            entry.options[CONF_CALENDAR_ENTITY_ID],
+    ) is None:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"{ISSUE_MISSING_CALENDAR_ENTITY}_{entry.options[CONF_CALENDAR_ENTITY_ID]}",
+            is_fixable=True,
+            severity=IssueSeverity.ERROR,
+            translation_key="missing_calendar_entity",
+            translation_placeholders={
+                "calendar_entity": entry.options[CONF_CALENDAR_ENTITY_ID],
+                "entry_title": entry.title or "Calendar Event",
+            },
+            data={"entry_id": entry.entry_id},
         )
+
         return False
+
+    # Clean up any existing repair issues since the entity is now valid
+    async_delete_issue(
+        hass, DOMAIN, f"{ISSUE_MISSING_CALENDAR_ENTITY}_{entry.entry_id}"
+    )
 
     def set_source_entity_id_or_uuid(source_entity_id: str) -> None:
         hass.config_entries.async_update_entry(
             entry,
             options={**entry.options, CONF_CALENDAR_ENTITY_ID: source_entity_id},
         )
+        # Clean up repair issue when entity is updated
+        async_delete_issue(
+            hass, DOMAIN, f"{ISSUE_MISSING_CALENDAR_ENTITY}_{entry.entry_id}"
+        )
 
     async def source_entity_removed() -> None:
         # The source entity has been removed.
         LOGGER.error(
-            "Failed to setup calender_event for unknown entity %s",
+            "Failed to setup calendar_event for unknown entity %s",
             entry.options[CONF_CALENDAR_ENTITY_ID],
+        )
+
+        # Create a repair issue for the removed calendar entity
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"{ISSUE_MISSING_CALENDAR_ENTITY}_{entry.entry_id}",
+            is_fixable=True,
+            severity=IssueSeverity.ERROR,
+            translation_key="missing_calendar_entity",
+            translation_placeholders={
+                "calendar_entity": entry.options[CONF_CALENDAR_ENTITY_ID],
+                "entry_title": entry.title or "Calendar Event",
+            },
+            data={"entry_id": entry.entry_id},
         )
 
     entry.async_on_unload(
@@ -99,4 +143,10 @@ async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+
+    # Clean up any repair issues when unloading the entry
+    async_delete_issue(
+        hass, DOMAIN, f"{ISSUE_MISSING_CALENDAR_ENTITY}_{entry.entry_id}"
+    )
+
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
