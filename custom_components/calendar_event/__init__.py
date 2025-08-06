@@ -68,9 +68,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     async def source_entity_removed() -> None:
-        # The source entity has been removed, we remove the config entry because
-        # calendar_event does not allow replacing the wrapped entity.
-        await hass.config_entries.async_remove(entry.entry_id)
+        # The source entity has been removed.
+        LOGGER.error(
+            "Failed to setup calender_event for unknown entity %s",
+            entry.options[CONF_CALENDAR_ENTITY_ID],
+        )
 
     entry.async_on_unload(
         async_handle_source_entity_changes(
