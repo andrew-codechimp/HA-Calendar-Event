@@ -31,5 +31,19 @@
                 }
             }
         }
+    },
+    "issues": {
+        "missing_calendar_entity": {
+            "title": "Calendar entity missing for {entry_title}",
+            "description": "The calendar entity `{calendar_entity}` is no longer available. Please update the configuration to select a different calendar entity.",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Update calendar entity",
+                        "description": "The calendar entity `{calendar_entity}` is no longer available for the Calendar Event helper '{entry_title}'. Click 'Submit' to open the configuration options and select a different calendar entity."
+                    }
+                }
+            }
+        }
     }
 }
