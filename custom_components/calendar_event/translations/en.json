@@ -5,13 +5,13 @@
                 "title": "Calendar Event",
                 "description": "Create a binary sensor that is on if the calendar event meets the criteria.",
                 "data": {
-                    "calendar_entity": "Calendar",
                     "name": "Name",
+                    "calendar_entity_id": "Calendar",
                     "summary": "Summary"
                 },
                 "data_description": {
-                    "calendar_entity": "The calendar entity to monitor for events.",
                     "name": "A friendly name for this binary sensor.",
+                    "calendar_entity_id": "The calendar entity to monitor for events.",
                     "summary": "The calendar event summary text to match."
                 }
             }
