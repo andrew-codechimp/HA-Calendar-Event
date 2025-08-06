@@ -10,7 +10,6 @@
                     "summary": "Summary"
                 },
                 "data_description": {
-                    "name": "A friendly name for this binary sensor.",
                     "calendar_entity_id": "The calendar entity to monitor for events.",
                     "summary": "The calendar event summary text to match."
                 }

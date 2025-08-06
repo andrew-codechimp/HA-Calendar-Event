@@ -99,15 +99,12 @@ class CalendarEventBinarySensor(BinarySensorEntity):
     async def _state_changed(self, event: Event) -> None:
         """Handle calendar entity state changes."""
         if event.data.get("entity_id") == self._calendar_entity_id:
-            print(event)
             await self._update_state()
 
     async def _update_state(self) -> None:
         """Update the binary sensor state based on calendar events."""
 
         calendar_state = self._hass.states.get(self._calendar_entity_id)
-
-        print(calendar_state)
 
         if calendar_state is None:
             self._attr_is_on = False
