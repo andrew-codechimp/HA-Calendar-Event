@@ -17,6 +17,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_ENTITIES,
+    CONF_CALENDAR_ENTITY,
+    CONF_SUMMARY,
 )
 
 
@@ -32,7 +34,9 @@ async def async_setup_entry(
 ) -> None:
     """Initialize Calendar Event config entry."""
 
-    name: str | None = config_entry.options.get(CONF_NAME)
+    name: str | None = config_entry.data.get("name")
+    calendar_entity: str = config_entry.data[CONF_CALENDAR_ENTITY]
+    summary: str = config_entry.data[CONF_SUMMARY]
     unique_id = config_entry.entry_id
 
     config_entry.async_on_unload(
@@ -45,6 +49,8 @@ async def async_setup_entry(
                 hass,
                 name,
                 unique_id,
+                calendar_entity,
+                summary,
             )
         ]
     )
@@ -56,8 +62,10 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the min/max/mean sensor."""
+    """Set up the calendar event sensor."""
     name: str | None = config.get(CONF_NAME)
+    calendar_entity: str = config[CONF_CALENDAR_ENTITY]
+    summary: str = config[CONF_SUMMARY]
     unique_id = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
@@ -66,6 +74,8 @@ async def async_setup_platform(
                 hass,
                 name,
                 unique_id,
+                calendar_entity,
+                summary,
             )
         ]
     )
@@ -84,10 +94,14 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         hass: HomeAssistant,
         name: str | None,
         unique_id: str | None,
+        calendar_entity: str,
+        summary: str,
     ) -> None:
         """Initialize the Calendar Event sensor."""
         self._attr_unique_id = unique_id
         self._attr_name = name
+        self._calendar_entity = calendar_entity
+        self._summary = summary
 
         self._unit_of_measurement_mismatch = False
 
