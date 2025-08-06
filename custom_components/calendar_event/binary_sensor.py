@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_STATE_CHANGED
@@ -102,7 +104,6 @@ class CalendarEventBinarySensor(BinarySensorEntity):
     async def _update_state(self) -> None:
         """Update the binary sensor state based on calendar events."""
 
-        # TODO: Fix this as it does not look at currently active events
         calendar_state = self._hass.states.get(self._calendar_entity_id)
 
         if calendar_state is None:
@@ -115,18 +116,58 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             self.async_write_ha_state()
             return
 
-        # Check if the current calendar event's message/summary matches our target summary
-        message = str(calendar_state.attributes.get("message", ""))
-        description = calendar_state.attributes.get("description", "")
+        # Fetch all events for the calendar entity using the get_events service
+        now = datetime.now()
+        end_date_time = (now + timedelta(hours=1)).isoformat()
 
-        # Set binary sensor to on if the message matches the configured summary
-        self._attr_is_on = self._summary.lower() in message.lower()
-
-        # Update attributes with the description from the calendar entity
-        self._attr_extra_state_attributes.update(
+        events = await self._hass.services.async_call(
+            "calendar",
+            "get_events",
             {
-                ATTR_DESCRIPTION: description,
-            }
+                "entity_id": self._calendar_entity_id,
+                "end_date_time": end_date_time,
+            },
+            blocking=True,
+            return_response=True,
         )
+
+        print(events)
+
+        # {
+        #     "calendar.system": {
+        #         "events": [
+        #             {
+        #                 "start": "2025-08-06T17:00:00+01:00",
+        #                 "end": "2025-08-06T23:00:00+01:00",
+        #                 "summary": "Evening",
+        #                 "description": "It's evening",
+        #             }
+        #         ]
+        #     }
+        # }
+
+        # TODO: This will be on if there's an existing event, so we don't get a new event
+        # need to create a polling mechanism to check for new events
+
+        calendar_events = events.get(self._calendar_entity_id, {}).get("events", [])
+        for event in calendar_events:
+            # Check if the event summary matches the configured summary (case-insensitive, partial match)
+            if not isinstance(event, dict):
+                continue
+            if self._summary.lower() in event.get("summary", "").lower():
+                self._attr_is_on = True
+                self._attr_extra_state_attributes.update(
+                    {
+                        ATTR_DESCRIPTION: event.get("description", ""),
+                    }
+                )
+                break
+            else:
+                self._attr_is_on = False
+                self._attr_extra_state_attributes.update(
+                    {
+                        ATTR_DESCRIPTION: None,
+                    }
+                )
 
         self.async_write_ha_state()
