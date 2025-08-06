@@ -4,21 +4,14 @@ from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-    EVENT_STATE_CHANGED,
-)
+from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_DESCRIPTION,
-    CONF_CALENDAR_ENTITY,
+    CONF_CALENDAR_ENTITY_ID,
     CONF_SUMMARY,
 )
 
@@ -36,8 +29,8 @@ async def async_setup_entry(
     """Initialize Calendar Event config entry."""
 
     name: str | None = config_entry.data.get("name")
-    calendar_entity: str = config_entry.data[CONF_CALENDAR_ENTITY]
-    summary: str = config_entry.data[CONF_SUMMARY]
+    calendar_entity: str = config_entry.options[CONF_CALENDAR_ENTITY_ID]
+    summary: str = config_entry.options[CONF_SUMMARY]
     unique_id = config_entry.entry_id
 
     config_entry.async_on_unload(
@@ -48,31 +41,7 @@ async def async_setup_entry(
         [
             CalendarEventBinarySensor(
                 hass,
-                name,
-                unique_id,
-                calendar_entity,
-                summary,
-            )
-        ]
-    )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the calendar event sensor."""
-    name: str | None = config.get(CONF_NAME)
-    calendar_entity: str = config[CONF_CALENDAR_ENTITY]
-    summary: str = config[CONF_SUMMARY]
-    unique_id = config.get(CONF_UNIQUE_ID)
-
-    async_add_entities(
-        [
-            CalendarEventBinarySensor(
-                hass,
+                config_entry,
                 name,
                 unique_id,
                 calendar_entity,
@@ -93,19 +62,19 @@ class CalendarEventBinarySensor(BinarySensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         name: str | None,
         unique_id: str | None,
-        calendar_entity: str,
+        calendar_entity_id: str,
         summary: str,
     ) -> None:
         """Initialize the Calendar Event sensor."""
         self._attr_unique_id = unique_id
         self._attr_name = name
-        self._calendar_entity = calendar_entity
+        self._calendar_entity_id = calendar_entity_id
         self._summary = summary
         self._hass = hass
-
-        self._unit_of_measurement_mismatch = False
+        self._config_entry = config_entry
 
         self._attr_is_on = False
         self._attr_extra_state_attributes = {}
@@ -121,18 +90,24 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             )
         )
 
+        # Add entity registry listener for entity ID changes
+        entity_registry = er.async_get(self._hass)
+        self.async_on_remove(
+            entity_registry.async_listen(self._entity_registry_updated)
+        )
+
         # Check initial state
         await self._update_state()
 
     @callback
     async def _calendar_state_changed(self, event: Event) -> None:
         """Handle calendar entity state changes."""
-        if event.data.get("entity_id") == self._calendar_entity:
+        if event.data.get("entity_id") == self._calendar_entity_id:
             await self._update_state()
 
     async def _update_state(self) -> None:
         """Update the binary sensor state based on calendar events."""
-        calendar_state = self._hass.states.get(self._calendar_entity)
+        calendar_state = self._hass.states.get(self._calendar_entity_id)
 
         if calendar_state is None:
             self._attr_is_on = False

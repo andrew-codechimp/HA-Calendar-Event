@@ -8,7 +8,7 @@ from homeassistant.const import Platform
 
 LOGGER: Logger = getLogger(__package__)
 
-MIN_HA_VERSION = "2025.3"
+MIN_HA_VERSION = "2025.7"
 
 manifestfile = Path(__file__).parent / "manifest.json"
 with open(file=manifestfile, encoding="UTF-8") as json_file:
@@ -22,7 +22,7 @@ CONFIG_VERSION = 1
 
 PLATFORMS = [Platform.BINARY_SENSOR]
 
-CONF_CALENDAR_ENTITY = "calendar_entity"
+CONF_CALENDAR_ENTITY_ID = "calendar_entity_id"
 CONF_SUMMARY = "summary"
 
 ATTR_DESCRIPTION = "description"

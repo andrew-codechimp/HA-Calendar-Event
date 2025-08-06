@@ -13,14 +13,14 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import (
-    CONF_CALENDAR_ENTITY,
+    CONF_CALENDAR_ENTITY_ID,
     CONF_SUMMARY,
     DOMAIN,
 )
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_CALENDAR_ENTITY): selector.EntitySelector(
+        vol.Required(CONF_CALENDAR_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="calendar")
         ),
         vol.Required(CONF_SUMMARY): selector.TextSelector(),
@@ -44,7 +44,7 @@ OPTIONS_FLOW = {
 
 
 class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
-    """Handle a config or options flow for Min/Max."""
+    """Handle a config or options flow for calendar_event."""
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
