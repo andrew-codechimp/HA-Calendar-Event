@@ -24,6 +24,7 @@ CONFIG_VERSION = 1
 PLATFORMS = [Platform.BINARY_SENSOR]
 
 CONF_LABEL = "label"
+CONF_CALENDAR_ENTITY = "calendar_entity"
 CONF_STATE_TYPE = "state_type"
 CONF_STATE_TO = "state_to"
 CONF_STATE_NOT = "state_not"

@@ -17,6 +17,7 @@
                 "title": "Label Numeric State",
                 "description": "Create a binary sensor that is on if any entities value with the label is outside of its normal bounds.",
                 "data": {
+                    "calendar_entity": "Kalender",
                     "label": "Label",
                     "name": "Name",
                     "state_lower_limit": "Lower bound",
@@ -27,6 +28,7 @@
                 "title": "Calendar Event",
                 "description": "Create a binary sensor that is on if any entity with the label has the specified state.",
                 "data": {
+                    "calendar_entity": "Kalender",
                     "label": "Label",
                     "name": "Name",
                     "state_to": "Is"
@@ -36,6 +38,7 @@
                 "title": "Label Not State",
                 "description": "Create a binary sensor that is on if any entity with the label does not have the specified state.",
                 "data": {
+                    "calendar_entity": "Kalender",
                     "label": "Label",
                     "name": "Name",
                     "state_not": "Not"
@@ -52,6 +55,7 @@
                 "title": "Label Numeric State",
                 "description": "Create a binary sensor that is on if any entities value with the label is outside of its normal bounds.",
                 "data": {
+                    "calendar_entity": "Kalender",
                     "label": "Label",
                     "state_lower_limit": "Lower bound",
                     "state_upper_limit": "Upper bound"
@@ -61,6 +65,7 @@
                 "title": "Calendar Event",
                 "description": "Create a binary sensor that is on if any entity with the label has the specified state.",
                 "data": {
+                    "calendar_entity": "Kalender",
                     "label": "Label",
                     "state_to": "Is"
                 }
@@ -69,6 +74,7 @@
                 "title": "Label Not State",
                 "description": "Create a binary sensor that is on if any entity with the label does not have the specified state.",
                 "data": {
+                    "calendar_entity": "Kalender",
                     "label": "Label",
                     "state_not": "Not"
                 }

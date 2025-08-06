@@ -16,6 +16,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import (
+    CONF_CALENDAR_ENTITY,
     CONF_LABEL,
     CONF_STATE_LOWER_LIMIT,
     CONF_STATE_NOT,
@@ -38,6 +39,9 @@ STATE_NOT_OPTIONS = [STATE_ON, STATE_OFF]
 
 OPTIONS_SCHEMA_NUMERIC_STATE = vol.Schema(
     {
+        vol.Required(CONF_CALENDAR_ENTITY): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain="calendar")
+        ),
         vol.Required(CONF_LABEL): selector.LabelSelector(),
         vol.Optional(CONF_STATE_LOWER_LIMIT): selector.NumberSelector(
             selector.NumberSelectorConfig(
@@ -54,6 +58,9 @@ OPTIONS_SCHEMA_NUMERIC_STATE = vol.Schema(
 
 OPTIONS_SCHEMA_STATE = vol.Schema(
     {
+        vol.Required(CONF_CALENDAR_ENTITY): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain="calendar")
+        ),
         vol.Required(CONF_LABEL): selector.LabelSelector(),
         vol.Required(CONF_STATE_TO): selector.SelectSelector(
             selector.SelectSelectorConfig(
@@ -67,6 +74,9 @@ OPTIONS_SCHEMA_STATE = vol.Schema(
 
 OPTIONS_SCHEMA_NOT_STATE = vol.Schema(
     {
+        vol.Required(CONF_CALENDAR_ENTITY): selector.EntitySelector(
+            selector.EntitySelectorConfig(domain="calendar")
+        ),
         vol.Required(CONF_LABEL): selector.LabelSelector(),
         vol.Required(CONF_STATE_NOT): selector.SelectSelector(
             selector.SelectSelectorConfig(
