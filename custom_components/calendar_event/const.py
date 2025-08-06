@@ -22,8 +22,8 @@ CONFIG_VERSION = 1
 
 PLATFORMS = [Platform.BINARY_SENSOR]
 
-CONF_LABEL = "label"
 CONF_CALENDAR_ENTITY = "calendar_entity"
+CONF_SUMMARY = "summary"
 
 ATTR_ENTITIES = "entities"
 ATTR_ENTITY_NAMES = "entity_names"

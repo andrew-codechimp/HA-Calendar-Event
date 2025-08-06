@@ -14,6 +14,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .const import (
     CONF_CALENDAR_ENTITY,
+    CONF_SUMMARY,
     DOMAIN,
 )
 
@@ -22,13 +23,13 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(CONF_CALENDAR_ENTITY): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="calendar")
         ),
+        vol.Required(CONF_SUMMARY): selector.TextSelector(),
     }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required("name"): selector.TextSelector(),
-        vol.Required("summary"): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
