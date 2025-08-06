@@ -149,6 +149,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         # TODO: This will be on if there's an existing event, so we don't get a new event
         # need to create a polling mechanism to check for new events, or look at state_reported
         # https://developers.home-assistant.io/blog/2024/03/20/state_reported_timestamp/
+        # also https://github.com/andrew-codechimp/HA-Battery-Notes/pull/1337/files#diff-1bb5e0ea81eb98dae60348901d92fb42f456eccfb7c47623deca78d325338935
 
         calendar_events = events.get(self._calendar_entity_id, {}).get("events", [])
         for event in calendar_events:
