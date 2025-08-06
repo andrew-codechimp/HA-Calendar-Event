@@ -9,15 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    EventStateReportedData,
-    async_track_entity_registry_updated_event,
-    async_track_state_change_event,
-    async_track_state_report_event,
-)
 
-from .const import ATTR_DESCRIPTION, CONF_CALENDAR_ENTITY_ID, CONF_SUMMARY, LOGGER
+from .const import ATTR_DESCRIPTION, CONF_CALENDAR_ENTITY_ID, CONF_SUMMARY
 
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
