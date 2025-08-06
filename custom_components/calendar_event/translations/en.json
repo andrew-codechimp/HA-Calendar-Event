@@ -23,11 +23,11 @@
                 "title": "Calendar Event Options",
                 "description": "Configure the calendar event options.",
                 "data": {
-                    "calendar_entity": "Calendar",
+                    "calendar_entity_id": "Calendar",
                     "summary": "Summary"
                 },
                 "data_description": {
-                    "calendar_entity": "The calendar entity to monitor for events.",
+                    "calendar_entity_id": "The calendar entity to monitor for events.",
                     "summary": "The calendar event summary text to match."
                 }
             }
