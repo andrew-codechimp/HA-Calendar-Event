@@ -26,5 +26,3 @@ CONF_CALENDAR_ENTITY_ID = "calendar_entity_id"
 CONF_SUMMARY = "summary"
 
 ATTR_DESCRIPTION = "description"
-
-ISSUE_MISSING_CALENDAR_ENTITY = "missing_calendar_entity"
