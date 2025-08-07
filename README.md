@@ -5,7 +5,7 @@
 [![Downloads][download-latest-shield]]()
 [![HACS Installs][hacs-installs-shield]]()
 [![License][license-shield]](LICENSE)
-[![hacs][hacsbadge]][hacs]
+<!-- [![hacs][hacsbadge]][hacs] -->
 
 # WORK IN PROGRESS
 Do not use until there is a 1.x release, things are subject to breaking changes.  
