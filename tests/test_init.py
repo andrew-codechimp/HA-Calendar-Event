@@ -9,7 +9,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import label_registry as lr
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.calendar_event.const import DOMAIN
+from custom_components.calendar_event.const import (
+    DOMAIN,
+)
 
 from .const import DEFAULT_NAME
 
@@ -41,22 +43,17 @@ async def test_setup(
         identifiers={("sensor", "test_source")},
     )
 
-    test_label = label_registry.async_create(
-        "test",
-    )
-
     # Source entity registry
     source_entity = entity_registry.async_get_or_create(
-        "sensor",
+        "calendar",
         "test",
         "source",
         config_entry=source_config_entry,
         device_id=source_device_entry.id,
     )
-    source_entity.labels.add(test_label.label_id)
 
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get("calendar.my_calendar") is not None
 
     # Configure the configuration entry for PeriodicMinMax
     calendar_event_config_entry = MockConfigEntry(
@@ -64,9 +61,9 @@ async def test_setup(
         domain=DOMAIN,
         options={
             "name": DEFAULT_NAME,
-            "label": test_label.label_id,
-            "state_type": "state",
-            "state_to": "on",
+            "calendar_entity_id": "calendar.my_calendar",
+            "summary": "Test Event",
+            "comparison_method": "contains",
         },
         title=DEFAULT_NAME,
     )

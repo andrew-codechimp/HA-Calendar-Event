@@ -9,14 +9,17 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
-    CONF_ENTITY_ID,
     CONF_NAME,
-    CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.calendar_event.const import DOMAIN
+from custom_components.calendar_event.const import (
+    CONF_CALENDAR_ENTITY_ID,
+    CONF_COMPARISON_METHOD,
+    CONF_SUMMARY,
+    DOMAIN,
+)
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
@@ -48,8 +51,9 @@ async def get_config_to_integration_load() -> dict[str, Any]:
     """
     return {
         CONF_NAME: "My calendar_event sensor",
-        CONF_ENTITY_ID: "sensor.test_monitored",
-        CONF_TYPE: "max",
+        CONF_CALENDAR_ENTITY_ID: "calendar.my_calendar",
+        CONF_SUMMARY: "Test Event",
+        CONF_COMPARISON_METHOD: "contains",
     }
 
 

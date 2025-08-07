@@ -11,12 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.calendar_event.const import (
-    CONF_LABEL,
-    CONF_STATE_LOWER_LIMIT,
-    CONF_STATE_NOT,
-    CONF_STATE_TO,
-    CONF_STATE_TYPE,
-    CONF_STATE_UPPER_LIMIT,
+    CONF_CALENDAR_ENTITY_ID,
+    CONF_COMPARISON_METHOD,
+    CONF_SUMMARY,
     DOMAIN,
 )
 
@@ -24,122 +21,121 @@ from custom_components.calendar_event.const import (
 @pytest.mark.parametrize(
     (
         "name",
-        "state_type",
-        "label",
-        "state_to",
-        "state_not",
-        "state_lower_limit",
-        "state_upper_limit",
+        "calendar_entity_id",
+        "summary",
+        "comparison_method",
     ),
     [
         (
-            "Unavailable",
-            "state",
-            "my_label",
-            "unavailable",
-            None,
-            None,
-            None,
+            "Test Calendar Event",
+            "calendar.my_calendar",
+            "Meeting",
+            "contains",
         ),
         (
-            "On",
-            "state_not",
-            "my_label",
-            None,
-            "on",
-            None,
-            None,
+            "Another Test",
+            "calendar.work_calendar",
+            "Doctor",
+            "starts_with",
         ),
         (
-            "Numeric State",
-            "numeric_state",
-            "my_label",
-            None,
-            None,
-            10,
-            20,
+            "Third Test",
+            "calendar.personal",
+            "Appointment",
+            "ends_with",
+        ),
+        (
+            "Exact Match Test",
+            "calendar.events",
+            "Birthday Party",
+            "exactly",
         ),
     ],
 )
 async def test_config_flow(
     hass: HomeAssistant,
     name: str,
-    state_type: str,
-    label: str,
-    state_to: str | None,
-    state_not: str | None,
-    state_lower_limit: float | None,
-    state_upper_limit: float | None,
+    calendar_entity_id: str,
+    summary: str,
+    comparison_method: str,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the config flow."""
 
-    menu_step = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert menu_step.get("type") is FlowResultType.MENU
-    assert menu_step.get("step_id") == "user"
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
-    form_step = await hass.config_entries.flow.async_configure(
-        menu_step["flow_id"],
-        {"next_step_id": state_type},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: name,
+            CONF_CALENDAR_ENTITY_ID: calendar_entity_id,
+            CONF_SUMMARY: summary,
+            CONF_COMPARISON_METHOD: comparison_method,
+        },
     )
-
-    if state_type == "numeric_state":
-        result = await hass.config_entries.flow.async_configure(
-            form_step["flow_id"],
-            {
-                CONF_NAME: name,
-                CONF_LABEL: label,
-                CONF_STATE_LOWER_LIMIT: state_lower_limit,
-                CONF_STATE_UPPER_LIMIT: state_upper_limit,
-            },
-        )
-    elif state_type == "state":
-        result = await hass.config_entries.flow.async_configure(
-            form_step["flow_id"],
-            {
-                CONF_NAME: name,
-                CONF_LABEL: label,
-                CONF_STATE_TO: state_to,
-            },
-        )
-    elif state_type == "state_not":
-        result = await hass.config_entries.flow.async_configure(
-            form_step["flow_id"],
-            {
-                CONF_NAME: name,
-                CONF_LABEL: label,
-                CONF_STATE_NOT: state_not,
-            },
-        )
 
     await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("version") == 1
+    assert result.get("title") == name
 
-    if state_type == "numeric_state":
-        assert result.get("options") == {
-            CONF_NAME: name,
-            CONF_STATE_TYPE: state_type,
-            CONF_LABEL: label,
-            CONF_STATE_LOWER_LIMIT: state_lower_limit,
-            CONF_STATE_UPPER_LIMIT: state_upper_limit,
-        }
-    elif state_type == "state":
-        assert result.get("options") == {
-            CONF_NAME: name,
-            CONF_STATE_TYPE: state_type,
-            CONF_LABEL: label,
-            CONF_STATE_TO: state_to,
-        }
-    elif state_type == "state_not":
-        assert result.get("options") == {
-            CONF_NAME: name,
-            CONF_STATE_TYPE: state_type,
-            CONF_LABEL: label,
-            CONF_STATE_NOT: state_not,
-        }
+    assert result.get("options") == {
+        CONF_NAME: name,
+        CONF_CALENDAR_ENTITY_ID: calendar_entity_id,
+        CONF_SUMMARY: summary,
+        CONF_COMPARISON_METHOD: comparison_method,
+    }
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test the options flow."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    # Create a config entry
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            CONF_NAME: "Original Name",
+            CONF_CALENDAR_ENTITY_ID: "calendar.original",
+            CONF_SUMMARY: "Original Summary",
+            CONF_COMPARISON_METHOD: "contains",
+        },
+        title="Original Name",
+    )
+    config_entry.add_to_hass(hass)
+
+    # Start the options flow
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "init"
+
+    # Configure the options
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_ENTITY_ID: "calendar.updated",
+            CONF_SUMMARY: "Updated Summary",
+            CONF_COMPARISON_METHOD: "starts_with",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("data") == {
+        CONF_NAME: "Original Name",
+        CONF_CALENDAR_ENTITY_ID: "calendar.updated",
+        CONF_SUMMARY: "Updated Summary",
+        CONF_COMPARISON_METHOD: "starts_with",
+    }
