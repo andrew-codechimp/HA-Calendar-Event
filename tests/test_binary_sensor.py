@@ -1,6 +1,6 @@
 """The test for the calendar_event binary sensor platform."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from homeassistant.core import HomeAssistant
@@ -193,19 +193,24 @@ async def test_binary_sensor_calendar_unavailable(
         title="Test Unavailable",
     )
 
-    await setup_integration(hass, config_entry)
+    with patch(
+        "custom_components.calendar_event.binary_sensor.CalendarEventBinarySensor._get_event_matching_summary"
+    ) as mock_get_events:
+        mock_get_events.return_value = None
 
-    binary_sensor_entity_id = "binary_sensor.test_unavailable"
+        await setup_integration(hass, config_entry)
 
-    # Set calendar to unavailable (remove it from the state registry)
-    hass.states.async_remove(mock_calendar_entity.entity_id)
-    await hass.async_block_till_done()
+        binary_sensor_entity_id = "binary_sensor.test_unavailable"
 
-    # Check binary sensor state
-    binary_sensor_state = hass.states.get(binary_sensor_entity_id)
-    assert binary_sensor_state is not None
-    assert binary_sensor_state.state == "off"
-    assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) == ""
+        # Set calendar to unavailable (remove it from the state registry)
+        hass.states.async_remove(mock_calendar_entity.entity_id)
+        await hass.async_block_till_done()
+
+        # Check binary sensor state
+        binary_sensor_state = hass.states.get(binary_sensor_entity_id)
+        assert binary_sensor_state is not None
+        assert binary_sensor_state.state == "off"
+        assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) == ""
 
 
 async def test_binary_sensor_state_change_listener(
@@ -371,3 +376,195 @@ def test_matches_criteria_logic(
 
     result = sensor._matches_criteria(event_summary)
     assert result == expected_match
+
+
+async def test_binary_sensor_disabled_no_call_later(
+    hass: HomeAssistant,
+    mock_calendar_entity: er.RegistryEntry,
+) -> None:
+    """Test that disabled binary sensor does not schedule periodic updates."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "name": "Test Disabled",
+            CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
+            CONF_SUMMARY: "meeting",
+            CONF_COMPARISON_METHOD: "contains",
+        },
+        title="Test Disabled",
+    )
+
+    with patch(
+        "custom_components.calendar_event.binary_sensor.CalendarEventBinarySensor._get_event_matching_summary"
+    ) as mock_get_events:
+        mock_get_events.return_value = {
+            "summary": "Team Meeting",
+            "description": "Test event description",
+        }
+
+        # Mock the call_later method to track if it's called
+        with patch.object(hass.loop, "call_later") as mock_call_later:
+            await setup_integration(hass, config_entry)
+
+            binary_sensor_entity_id = "binary_sensor.test_disabled"
+
+            # Get the binary sensor entity from the entity registry and disable it
+            entity_registry = er.async_get(hass)
+            entity_entry = entity_registry.async_get(binary_sensor_entity_id)
+            assert entity_entry is not None
+
+            # Disable the entity
+            entity_registry.async_update_entity(
+                entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+            await hass.async_block_till_done()
+
+            # Reset the mock to clear any previous calls
+            mock_call_later.reset_mock()
+
+            # Set calendar to active state to trigger potential call_later
+            hass.states.async_set(
+                mock_calendar_entity.entity_id,
+                "on",
+                {"message": "Team Meeting", "description": "Test description"},
+            )
+            await hass.async_block_till_done()
+
+            # Verify that call_later was NOT called for the disabled entity
+            mock_call_later.assert_not_called()
+
+
+async def test_binary_sensor_enabled_schedules_call_later(
+    hass: HomeAssistant,
+    mock_calendar_entity: er.RegistryEntry,
+) -> None:
+    """Test that enabled binary sensor schedules periodic updates when calendar is on."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "name": "Test Enabled",
+            CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
+            CONF_SUMMARY: "meeting",
+            CONF_COMPARISON_METHOD: "contains",
+        },
+        title="Test Enabled",
+    )
+
+    with patch(
+        "custom_components.calendar_event.binary_sensor.CalendarEventBinarySensor._get_event_matching_summary"
+    ) as mock_get_events:
+        mock_get_events.return_value = {
+            "summary": "Team Meeting",
+            "description": "Test event description",
+        }
+
+        # Mock the call_later method to track if it's called
+        with patch.object(hass.loop, "call_later") as mock_call_later:
+            await setup_integration(hass, config_entry)
+
+            binary_sensor_entity_id = "binary_sensor.test_enabled"
+
+            # Verify the entity is enabled by default
+            entity_registry = er.async_get(hass)
+            entity_entry = entity_registry.async_get(binary_sensor_entity_id)
+            assert entity_entry is not None
+            assert not entity_entry.disabled
+
+            # Reset the mock to clear any previous calls
+            mock_call_later.reset_mock()
+
+            # Set calendar to active state to trigger call_later
+            hass.states.async_set(
+                mock_calendar_entity.entity_id,
+                "on",
+                {"message": "Team Meeting", "description": "Test description"},
+            )
+            await hass.async_block_till_done()
+
+            # Verify that call_later WAS called for the enabled entity
+            mock_call_later.assert_called_once()
+
+            # Verify the call_later was scheduled with correct parameters
+            call_args = mock_call_later.call_args
+            assert len(call_args[0]) == 2  # delay and callback
+            delay = call_args[0][0]
+            assert isinstance(delay, (int, float))
+            assert 0 < delay <= 60  # Should be between 0 and 60 seconds
+
+
+async def test_binary_sensor_cancels_call_later_when_disabled(
+    hass: HomeAssistant,
+    mock_calendar_entity: er.RegistryEntry,
+) -> None:
+    """Test that binary sensor cancels call_later when entity is disabled during runtime."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "name": "Test Cancel",
+            CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
+            CONF_SUMMARY: "meeting",
+            CONF_COMPARISON_METHOD: "contains",
+        },
+        title="Test Cancel",
+    )
+
+    with patch(
+        "custom_components.calendar_event.binary_sensor.CalendarEventBinarySensor._get_event_matching_summary"
+    ) as mock_get_events:
+        mock_get_events.return_value = {
+            "summary": "Team Meeting",
+            "description": "Test event description",
+        }
+
+        await setup_integration(hass, config_entry)
+
+        binary_sensor_entity_id = "binary_sensor.test_cancel"
+
+        # Get the entity registry
+        entity_registry = er.async_get(hass)
+        entity_entry = entity_registry.async_get(binary_sensor_entity_id)
+        assert entity_entry is not None
+
+        # Create a mock handle to track cancellation
+        mock_handle = MagicMock()
+
+        with patch.object(
+            hass.loop, "call_later", return_value=mock_handle
+        ) as mock_call_later:
+            # Set calendar to active state to trigger call_later
+            hass.states.async_set(
+                mock_calendar_entity.entity_id,
+                "on",
+                {"message": "Team Meeting", "description": "Test description"},
+            )
+            await hass.async_block_till_done()
+
+            # Verify call_later was called and handle was stored
+            mock_call_later.assert_called_once()
+
+            # Reset mock to clear call
+            mock_call_later.reset_mock()
+
+            # Now disable the entity
+            entity_registry.async_update_entity(
+                entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+            await hass.async_block_till_done()
+
+            # Trigger another calendar state change
+            hass.states.async_set(
+                mock_calendar_entity.entity_id,
+                "on",
+                {"message": "Another Meeting", "description": "Test description 2"},
+            )
+            await hass.async_block_till_done()
+
+            # Verify the previous handle was cancelled and no new call_later was scheduled
+            mock_handle.cancel.assert_called_once()
+            mock_call_later.assert_not_called()

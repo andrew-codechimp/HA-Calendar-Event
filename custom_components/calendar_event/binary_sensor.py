@@ -87,6 +87,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         self._attr_is_on = False
         self._attr_extra_state_attributes = {}
+        self._call_later_handle = None
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
@@ -98,6 +99,17 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         )
 
         await self._update_state()
+
+    def _cancel_call_later(self) -> None:
+        """Cancel any pending call_later."""
+        if self._call_later_handle is not None:
+            self._call_later_handle.cancel()
+            self._call_later_handle = None
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle entity removal."""
+        self._cancel_call_later()
+        await super().async_will_remove_from_hass()
 
     @callback
     async def _state_changed(self, event: Event) -> None:
@@ -138,10 +150,13 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         self.async_write_ha_state()
 
-        if calendar_state.state == "on":
+        self._cancel_call_later()
+
+        # Schedule next update only if calendar is on and entity is enabled
+        if calendar_state.state == "on" and self.enabled:
             now = datetime.now()
             seconds_until_next_minute = 60 - now.second
-            self._hass.loop.call_later(
+            self._call_later_handle = self._hass.loop.call_later(
                 seconds_until_next_minute,
                 lambda: self._hass.async_create_task(self._update_state()),
             )
