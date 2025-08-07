@@ -56,15 +56,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entity_registry = er.async_get(hass)
 
-    # try:
-    #     entity_id = er.async_validate_entity_id(  # noqa: F841
-    #         entity_registry, entry.options[CONF_CALENDAR_ENTITY_ID]
-
-    if (
-        calendar_entity := entity_registry.entities.get_entry(
-            entry.options[CONF_CALENDAR_ENTITY_ID]
+    try:
+        _ = er.async_validate_entity_id(
+            entity_registry, entry.options[CONF_CALENDAR_ENTITY_ID]
         )
-    ) is None:
+    except vol.Invalid:
         async_create_issue(
             hass,
             DOMAIN,
@@ -97,13 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     async def source_entity_removed() -> None:
-        # The source entity has been removed.
-        LOGGER.error(
-            "Failed to setup calendar_event for unknown entity %s",
-            entry.options[CONF_CALENDAR_ENTITY_ID],
-        )
-
-        # Create a repair issue for the removed calendar entity
+        # The source entity has been removed, create a repair issue for the removed calendar entity.
         async_create_issue(
             hass,
             DOMAIN,
