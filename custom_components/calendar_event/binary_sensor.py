@@ -114,7 +114,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             self._attr_is_on = False
             self._attr_extra_state_attributes.update(
                 {
-                    ATTR_DESCRIPTION: None,
+                    ATTR_DESCRIPTION: "",
                 }
             )
             self.async_write_ha_state()
@@ -132,7 +132,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             self._attr_is_on = False
             self._attr_extra_state_attributes.update(
                 {
-                    ATTR_DESCRIPTION: None,
+                    ATTR_DESCRIPTION: "",
                 }
             )
 

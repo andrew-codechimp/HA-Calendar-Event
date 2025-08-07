@@ -130,7 +130,7 @@ async def test_binary_sensor_matching_criteria(
             )
         else:
             assert binary_sensor_state.state == "off"
-            assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) is None
+            assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) == ""
 
 
 async def test_binary_sensor_no_events(
@@ -172,7 +172,7 @@ async def test_binary_sensor_no_events(
         binary_sensor_state = hass.states.get(binary_sensor_entity_id)
         assert binary_sensor_state is not None
         assert binary_sensor_state.state == "off"
-        assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) is None
+        assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) == ""
 
 
 async def test_binary_sensor_calendar_unavailable(
@@ -205,7 +205,7 @@ async def test_binary_sensor_calendar_unavailable(
     binary_sensor_state = hass.states.get(binary_sensor_entity_id)
     assert binary_sensor_state is not None
     assert binary_sensor_state.state == "off"
-    assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) is None
+    assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) == ""
 
 
 async def test_binary_sensor_state_change_listener(
