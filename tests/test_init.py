@@ -50,18 +50,19 @@ async def test_setup(
         "source",
         config_entry=source_config_entry,
         device_id=source_device_entry.id,
+        suggested_object_id="my_calendar",
     )
 
     await hass.async_block_till_done()
-    assert entity_registry.async_get("calendar.my_calendar") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
-    # Configure the configuration entry for PeriodicMinMax
+    # Configure the configuration entry for calendar_event
     calendar_event_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": DEFAULT_NAME,
-            "calendar_entity_id": "calendar.my_calendar",
+            "calendar_entity_id": source_entity.entity_id,
             "summary": "Test Event",
             "comparison_method": "contains",
         },

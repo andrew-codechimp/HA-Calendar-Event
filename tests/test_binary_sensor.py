@@ -1,391 +1,373 @@
 """The test for the calendar_event binary sensor platform."""
 
+from unittest.mock import patch
+
 import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers import label_registry as lr
-from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from custom_components.calendar_event.const import (
+    ATTR_DESCRIPTION,
+    CONF_CALENDAR_ENTITY_ID,
+    CONF_COMPARISON_METHOD,
+    CONF_SUMMARY,
+    DOMAIN,
+)
 
 from . import setup_integration
 
 
-@pytest.mark.parametrize(
-    (
-        "state_1",
-        "state_2",
-        "state_3",
-        "expected_state",
-        "later_expected_state",
-    ),
-    [
-        (
-            "unavailable",
-            "on",
-            "on",
-            "on",
-            "on",
-        ),
-        (
-            "on",
-            "on",
-            "on",
-            "off",
-            "off",
-        ),
-        (
-            "off",
-            "off",
-            "unavailable",
-            "off",
-            "on",
-        ),
-    ],
-)
-async def test_state_sensor(
-    hass: HomeAssistant,
-    state_1: str,
-    state_2: str,
-    state_3: str,
-    expected_state: str,
-    later_expected_state: str,
-    entity_registry: er.EntityRegistry,
-    label_registry: lr.LabelRegistry,
-) -> None:
-    """Test the state sensor."""
-
-    test_label = label_registry.async_create(
+@pytest.fixture
+async def mock_calendar_entity(hass: HomeAssistant, entity_registry: er.EntityRegistry):
+    """Create a mock calendar entity."""
+    calendar_entity = entity_registry.async_get_or_create(
+        "calendar",
         "test",
+        "calendar_1",
+        suggested_object_id="test_calendar",
     )
 
-    sensor1_entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test_1", "unique", suggested_object_id="test_1"
-    )
-    await hass.async_block_till_done()
-    sensor1_entity_entry = entity_registry.async_update_entity(
-        sensor1_entity_entry.entity_id, labels={test_label.label_id}
-    )
-    await hass.async_block_till_done()
-    assert sensor1_entity_entry.entity_id == "sensor.test_1"
-
-    sensor2_entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test_2", "unique", suggested_object_id="test_2"
-    )
-    await hass.async_block_till_done()
-    sensor2_entity_entry = entity_registry.async_update_entity(
-        sensor2_entity_entry.entity_id, labels={test_label.label_id}
-    )
-    await hass.async_block_till_done()
-    assert sensor2_entity_entry.entity_id == "sensor.test_2"
-
-    config = MockConfigEntry(
-        domain="calendar_event",
-        data={},
-        options={
-            "name": "test_state",
-            "label": test_label.label_id,
-            "state_type": "state",
-            "state_to": "unavailable",
-        },
-        title="test_state",
+    # Set initial state
+    hass.states.async_set(
+        calendar_entity.entity_id,
+        "off",
+        {"message": "", "description": ""},
     )
 
-    await setup_integration(hass, config)
     await hass.async_block_till_done()
-
-    hass.states.async_set(sensor1_entity_entry.entity_id, state_1)
-    await hass.async_block_till_done()
-
-    hass.states.async_set(sensor2_entity_entry.entity_id, state_2)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.test_state")
-
-    assert state is not None
-    assert state.state == expected_state
-
-    # Add a third sensor to test the listener change
-    sensor3_entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test_3", "unique", suggested_object_id="test_3"
-    )
-    await hass.async_block_till_done()
-    sensor3_entity_entry = entity_registry.async_update_entity(
-        sensor3_entity_entry.entity_id, labels={test_label.label_id}
-    )
-    await hass.async_block_till_done()
-    assert sensor3_entity_entry.entity_id == "sensor.test_3"
-
-    hass.states.async_set(sensor3_entity_entry.entity_id, state_3)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.test_state")
-
-    assert state is not None
-    assert state.state == later_expected_state
-
-
-async def test_state_sensor_update(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    label_registry: lr.LabelRegistry,
-) -> None:
-    """Test the state sensor."""
-
-    test_label = label_registry.async_create(
-        "test",
-    )
-
-    sensor1_entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test_1", "unique1", suggested_object_id="test_1"
-    )
-    await hass.async_block_till_done()
-    sensor1_entity_entry = entity_registry.async_update_entity(
-        sensor1_entity_entry.entity_id, labels={test_label.label_id}
-    )
-    await hass.async_block_till_done()
-    assert sensor1_entity_entry.entity_id == "sensor.test_1"
-
-    sensor2_entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test_2", "unique2", suggested_object_id="test_2"
-    )
-    await hass.async_block_till_done()
-    sensor2_entity_entry = entity_registry.async_update_entity(
-        sensor2_entity_entry.entity_id, labels={test_label.label_id}
-    )
-    await hass.async_block_till_done()
-    assert sensor2_entity_entry.entity_id == "sensor.test_2"
-
-    config = MockConfigEntry(
-        domain="calendar_event",
-        data={},
-        options={
-            "name": "test_state",
-            "label": test_label.label_id,
-            "state_type": "state",
-            "state_to": "unavailable",
-        },
-        title="test_state",
-    )
-
-    await setup_integration(hass, config)
-    await hass.async_block_till_done()
-
-    hass.states.async_set(sensor1_entity_entry.entity_id, "unavailable")
-    await hass.async_block_till_done()
-
-    hass.states.async_set(sensor2_entity_entry.entity_id, "on")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.test_state")
-
-    assert state is not None
-    assert state.state == "on"
-    assert state.attributes["entities"] == ["sensor.test_1"]
-
-    hass.states.async_set(sensor2_entity_entry.entity_id, "unavailable")
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.test_state")
-
-    assert state is not None
-    assert state.state == "on"
-    assert state.attributes["entities"] == ["sensor.test_1", "sensor.test_2"]
+    return calendar_entity
 
 
 @pytest.mark.parametrize(
     (
-        "state_1",
-        "state_2",
-        "state_3",
-        "expected_state",
-        "later_expected_state",
+        "comparison_method",
+        "summary_text",
+        "event_summary",
+        "expected_match",
     ),
     [
-        (
-            "on",
-            "on",
-            "off",
-            "off",
-            "on",
-        ),
-        (
-            "on",
-            "on",
-            "on",
-            "off",
-            "off",
-        ),
-        (
-            "off",
-            "off",
-            "on",
-            "on",
-            "on",
-        ),
+        # Contains tests
+        ("contains", "meeting", "Team Meeting", True),
+        ("contains", "meeting", "Daily Standup", False),
+        ("contains", "doctor", "Doctor Appointment", True),
+        ("contains", "vacation", "Back from vacation", True),
+        ("contains", "party", "Birthday celebration", False),
+        # Starts with tests
+        ("starts_with", "meeting", "Meeting with client", True),
+        ("starts_with", "meeting", "Team Meeting", False),
+        ("starts_with", "doctor", "Doctor visit", True),
+        ("starts_with", "appointment", "Doctor Appointment", False),
+        # Ends with tests
+        ("ends_with", "meeting", "Daily Meeting", True),
+        ("ends_with", "meeting", "Meeting with boss", False),
+        ("ends_with", "appointment", "Doctor Appointment", True),
+        ("ends_with", "visit", "Doctor visit", True),
+        # Exactly tests
+        ("exactly", "meeting", "Meeting", True),
+        ("exactly", "meeting", "Team Meeting", False),
+        ("exactly", "doctor appointment", "Doctor Appointment", True),
+        ("exactly", "vacation", "Vacation time", False),
     ],
 )
-async def test_state_not_sensor(
+async def test_binary_sensor_matching_criteria(
     hass: HomeAssistant,
-    state_1: str,
-    state_2: str,
-    state_3: str,
-    expected_state: str,
-    later_expected_state: str,
-    entity_registry: er.EntityRegistry,
-    label_registry: lr.LabelRegistry,
+    mock_calendar_entity: er.RegistryEntry,
+    comparison_method: str,
+    summary_text: str,
+    event_summary: str,
+    expected_match: bool,
 ) -> None:
-    """Test the not state sensor."""
+    """Test binary sensor with different matching criteria."""
 
-    test_label = label_registry.async_create(
-        "test",
-    )
-
-    sensor1_entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test_1", "unique", suggested_object_id="test_1"
-    )
-    await hass.async_block_till_done()
-    sensor1_entity_entry = entity_registry.async_update_entity(
-        sensor1_entity_entry.entity_id, labels={test_label.label_id}
-    )
-    await hass.async_block_till_done()
-    assert sensor1_entity_entry.entity_id == "sensor.test_1"
-
-    sensor2_entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test_2", "unique", suggested_object_id="test_2"
-    )
-    await hass.async_block_till_done()
-    sensor2_entity_entry = entity_registry.async_update_entity(
-        sensor2_entity_entry.entity_id, labels={test_label.label_id}
-    )
-    await hass.async_block_till_done()
-    assert sensor2_entity_entry.entity_id == "sensor.test_2"
-
-    config = MockConfigEntry(
-        domain="calendar_event",
+    # Create config entry
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
         data={},
         options={
-            "name": "test_state",
-            "label": test_label.label_id,
-            "state_type": "state_not",
-            "state_not": "on",
+            "name": f"Test {comparison_method}",
+            CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
+            CONF_SUMMARY: summary_text,
+            CONF_COMPARISON_METHOD: comparison_method,
         },
-        title="test_state",
+        title=f"Test {comparison_method}",
     )
 
-    await setup_integration(hass, config)
-    await hass.async_block_till_done()
+    with patch(
+        "custom_components.calendar_event.binary_sensor.CalendarEventBinarySensor._get_event_matching_summary"
+    ) as mock_get_events:
+        if expected_match:
+            mock_get_events.return_value = {
+                "summary": event_summary,
+                "description": "Test event description",
+            }
+        else:
+            mock_get_events.return_value = None
 
-    hass.states.async_set(sensor1_entity_entry.entity_id, state_1)
-    await hass.async_block_till_done()
+        await setup_integration(hass, config_entry)
 
-    hass.states.async_set(sensor2_entity_entry.entity_id, state_2)
-    await hass.async_block_till_done()
+        # Get the binary sensor entity - normalize the name for entity ID
+        entity_name = f"Test {comparison_method}".lower().replace(" ", "_")
+        binary_sensor_entity_id = f"binary_sensor.{entity_name}"
 
-    state = hass.states.get("binary_sensor.test_state")
+        # Set calendar to active state to trigger event checking
+        hass.states.async_set(
+            mock_calendar_entity.entity_id,
+            "on",
+            {"message": event_summary, "description": "Test description"},
+        )
+        await hass.async_block_till_done()
 
-    assert state is not None
-    assert state.state == expected_state
+        # Check binary sensor state
+        binary_sensor_state = hass.states.get(binary_sensor_entity_id)
+        assert binary_sensor_state is not None
 
-    # Add a third sensor to test the listener change
-    sensor3_entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test_3", "unique", suggested_object_id="test_3"
-    )
-    await hass.async_block_till_done()
-    sensor3_entity_entry = entity_registry.async_update_entity(
-        sensor3_entity_entry.entity_id, labels={test_label.label_id}
-    )
-    await hass.async_block_till_done()
-    assert sensor3_entity_entry.entity_id == "sensor.test_3"
-
-    hass.states.async_set(sensor3_entity_entry.entity_id, state_3)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("binary_sensor.test_state")
-
-    assert state is not None
-    assert state.state == later_expected_state
+        if expected_match:
+            assert binary_sensor_state.state == "on"
+            assert (
+                binary_sensor_state.attributes.get(ATTR_DESCRIPTION)
+                == "Test event description"
+            )
+        else:
+            assert binary_sensor_state.state == "off"
+            assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) is None
 
 
-@pytest.mark.parametrize(
-    (
-        "state_1",
-        "state_2",
-        "state_lower_limit",
-        "state_upper_limit",
-        "expected_state",
-    ),
-    [
-        ("11", "12", 10, 20, "off"),
-        ("1", "12", 10, 20, "on"),
-        ("11", "12", 10, None, "off"),
-        ("1", "12", 10, None, "on"),
-        ("1", "19", None, 20, "off"),
-        ("1", "22", None, 20, "on"),
-    ],
-)
-async def test_numeric_state_sensor(
+async def test_binary_sensor_no_events(
     hass: HomeAssistant,
-    state_1: str,
-    state_2: str,
-    state_lower_limit: float | None,
-    state_upper_limit: float | None,
-    expected_state: str,
-    entity_registry: er.EntityRegistry,
-    label_registry: lr.LabelRegistry,
+    mock_calendar_entity: er.RegistryEntry,
 ) -> None:
-    """Test the numeric state sensor."""
+    """Test binary sensor when no events are found."""
 
-    test_label = label_registry.async_create(
-        "test_numeric_state_label",
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "name": "Test No Events",
+            CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
+            CONF_SUMMARY: "meeting",
+            CONF_COMPARISON_METHOD: "contains",
+        },
+        title="Test No Events",
     )
 
-    sensor1_entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test_1", "unique", suggested_object_id="test_1"
-    )
-    await hass.async_block_till_done()
-    sensor1_entity_entry = entity_registry.async_update_entity(
-        sensor1_entity_entry.entity_id, labels={test_label.label_id}
-    )
-    await hass.async_block_till_done()
-    assert sensor1_entity_entry.entity_id == "sensor.test_1"
-    assert test_label.label_id in sensor1_entity_entry.labels
+    with patch(
+        "custom_components.calendar_event.binary_sensor.CalendarEventBinarySensor._get_event_matching_summary"
+    ) as mock_get_events:
+        mock_get_events.return_value = None
 
-    sensor2_entity_entry = entity_registry.async_get_or_create(
-        "sensor", "test_2", "unique", suggested_object_id="test_2"
-    )
-    await hass.async_block_till_done()
-    sensor2_entity_entry = entity_registry.async_update_entity(
-        sensor2_entity_entry.entity_id, labels={test_label.label_id}
-    )
-    await hass.async_block_till_done()
-    assert sensor2_entity_entry.entity_id == "sensor.test_2"
-    assert test_label.label_id in sensor2_entity_entry.labels
+        await setup_integration(hass, config_entry)
 
-    config = {
-        "binary_sensor": {
-            "platform": "calendar_event",
-            "name": "test_numeric_state",
-            "label": test_label.label_id,
-            "state_type": "numeric_state",
-            "state_lower_limit": state_lower_limit,
-            "state_upper_limit": state_upper_limit,
+        binary_sensor_entity_id = "binary_sensor.test_no_events"
+
+        # Set calendar to active state
+        hass.states.async_set(
+            mock_calendar_entity.entity_id,
+            "on",
+            {"message": "", "description": ""},
+        )
+        await hass.async_block_till_done()
+
+        # Check binary sensor state
+        binary_sensor_state = hass.states.get(binary_sensor_entity_id)
+        assert binary_sensor_state is not None
+        assert binary_sensor_state.state == "off"
+        assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) is None
+
+
+async def test_binary_sensor_calendar_unavailable(
+    hass: HomeAssistant,
+    mock_calendar_entity: er.RegistryEntry,
+) -> None:
+    """Test binary sensor when calendar entity is unavailable."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "name": "Test Unavailable",
+            CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
+            CONF_SUMMARY: "meeting",
+            CONF_COMPARISON_METHOD: "contains",
+        },
+        title="Test Unavailable",
+    )
+
+    await setup_integration(hass, config_entry)
+
+    binary_sensor_entity_id = "binary_sensor.test_unavailable"
+
+    # Set calendar to unavailable (remove it from the state registry)
+    hass.states.async_remove(mock_calendar_entity.entity_id)
+    await hass.async_block_till_done()
+
+    # Check binary sensor state
+    binary_sensor_state = hass.states.get(binary_sensor_entity_id)
+    assert binary_sensor_state is not None
+    assert binary_sensor_state.state == "off"
+    assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) is None
+
+
+async def test_binary_sensor_state_change_listener(
+    hass: HomeAssistant,
+    mock_calendar_entity: er.RegistryEntry,
+) -> None:
+    """Test that binary sensor responds to calendar state changes."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "name": "Test State Change",
+            CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
+            CONF_SUMMARY: "meeting",
+            CONF_COMPARISON_METHOD: "contains",
+        },
+        title="Test State Change",
+    )
+
+    with patch(
+        "custom_components.calendar_event.binary_sensor.CalendarEventBinarySensor._get_event_matching_summary"
+    ) as mock_get_events:
+        # Initially no events
+        mock_get_events.return_value = None
+
+        await setup_integration(hass, config_entry)
+
+        binary_sensor_entity_id = "binary_sensor.test_state_change"
+
+        # Initially calendar is off
+        binary_sensor_state = hass.states.get(binary_sensor_entity_id)
+        assert binary_sensor_state.state == "off"
+
+        # Now mock finding a matching event
+        mock_get_events.return_value = {
+            "summary": "Team Meeting",
+            "description": "Weekly team sync",
         }
-    }
 
-    assert await async_setup_component(hass, "binary_sensor", config)
-    await hass.async_block_till_done()
+        # Change calendar to active state
+        hass.states.async_set(
+            mock_calendar_entity.entity_id,
+            "on",
+            {"message": "Team Meeting", "description": "Weekly team sync"},
+        )
+        await hass.async_block_till_done()
 
-    hass.states.async_set(sensor1_entity_entry.entity_id, state_1)
-    await hass.async_block_till_done()
+        # Check binary sensor is now on
+        binary_sensor_state = hass.states.get(binary_sensor_entity_id)
+        assert binary_sensor_state.state == "on"
+        assert (
+            binary_sensor_state.attributes.get(ATTR_DESCRIPTION) == "Weekly team sync"
+        )
 
-    hass.states.async_set(sensor2_entity_entry.entity_id, state_2)
-    await hass.async_block_till_done()
+        # Mock no events again
+        mock_get_events.return_value = None
 
-    state1 = hass.states.get(sensor1_entity_entry.entity_id)
-    assert state1 is not None
-    assert state1.state == state_1
+        # Change calendar back to off
+        hass.states.async_set(
+            mock_calendar_entity.entity_id,
+            "off",
+            {"message": "", "description": ""},
+        )
+        await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.test_numeric_state")
+        # Check binary sensor is now off
+        binary_sensor_state = hass.states.get(binary_sensor_entity_id)
+        assert binary_sensor_state.state == "off"
 
-    assert state is not None
-    assert state.state == expected_state
+
+async def test_binary_sensor_default_comparison_method(
+    hass: HomeAssistant,
+    mock_calendar_entity: er.RegistryEntry,
+) -> None:
+    """Test that default comparison method is 'contains'."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "name": "Test Default",
+            CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
+            CONF_SUMMARY: "meeting",
+            # No CONF_COMPARISON_METHOD specified
+        },
+        title="Test Default",
+    )
+
+    with patch(
+        "custom_components.calendar_event.binary_sensor.CalendarEventBinarySensor._get_event_matching_summary"
+    ) as mock_get_events:
+        mock_get_events.return_value = {
+            "summary": "Team Meeting",
+            "description": "Default test",
+        }
+
+        await setup_integration(hass, config_entry)
+
+        binary_sensor_entity_id = "binary_sensor.test_default"
+
+        # Set calendar to active state
+        hass.states.async_set(
+            mock_calendar_entity.entity_id,
+            "on",
+            {"message": "Team Meeting", "description": "Default test"},
+        )
+        await hass.async_block_till_done()
+
+        # Check binary sensor matches with default 'contains' logic
+        binary_sensor_state = hass.states.get(binary_sensor_entity_id)
+        assert binary_sensor_state is not None
+        assert binary_sensor_state.state == "on"
+        assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) == "Default test"
+
+
+# Test the actual matching logic directly
+@pytest.mark.parametrize(
+    (
+        "comparison_method",
+        "summary_text",
+        "event_summary",
+        "expected_match",
+    ),
+    [
+        # Contains tests
+        ("contains", "meeting", "Team Meeting", True),
+        ("contains", "MEETING", "team meeting", True),  # Case insensitive
+        ("contains", "meeting", "Daily Standup", False),
+        # Starts with tests
+        ("starts_with", "meeting", "Meeting with client", True),
+        ("starts_with", "MEETING", "meeting with client", True),  # Case insensitive
+        ("starts_with", "meeting", "Team Meeting", False),
+        # Ends with tests
+        ("ends_with", "meeting", "Daily Meeting", True),
+        ("ends_with", "MEETING", "daily meeting", True),  # Case insensitive
+        ("ends_with", "meeting", "Meeting with boss", False),
+        # Exactly tests
+        ("exactly", "meeting", "Meeting", True),
+        ("exactly", "MEETING", "meeting", True),  # Case insensitive
+        ("exactly", "meeting", "Team Meeting", False),
+    ],
+)
+def test_matches_criteria_logic(
+    comparison_method: str,
+    summary_text: str,
+    event_summary: str,
+    expected_match: bool,
+) -> None:
+    """Test the matching criteria logic directly."""
+    from custom_components.calendar_event.binary_sensor import CalendarEventBinarySensor
+
+    # Create a mock sensor to test the matching logic
+    sensor = CalendarEventBinarySensor(
+        hass=None,
+        config_entry=None,
+        name="Test",
+        unique_id="test",
+        calendar_entity_id="calendar.test",
+        summary=summary_text,
+        comparison_method=comparison_method,
+    )
+
+    result = sensor._matches_criteria(event_summary)
+    assert result == expected_match

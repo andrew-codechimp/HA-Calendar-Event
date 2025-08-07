@@ -31,7 +31,9 @@ OPTIONS_SCHEMA = vol.Schema(
             CONF_COMPARISON_METHOD, default="contains"
         ): selector.SelectSelector(
             selector.SelectSelectorConfig(
-                options=_MATCHING_CRITERIA, translation_key=CONF_COMPARISON_METHOD
+                options=_MATCHING_CRITERIA,
+                mode="dropdown",
+                translation_key=CONF_COMPARISON_METHOD,
             ),
         ),
     }
