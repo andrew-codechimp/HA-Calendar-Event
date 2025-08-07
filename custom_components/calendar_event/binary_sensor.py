@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
 
 from .const import (
     ATTR_DESCRIPTION,
@@ -98,7 +99,29 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             self._hass.bus.async_listen(EVENT_STATE_CHANGED, self._state_changed)
         )
 
+        # Track entity registry updates to detect when entity is disabled/enabled
+        self.async_on_remove(
+            async_track_entity_registry_updated_event(
+                self._hass, self.entity_id, self._entity_registry_updated
+            )
+        )
+
         await self._update_state()
+
+    @callback
+    def _entity_registry_updated(self, event: Event) -> None:
+        """Handle entity registry update."""
+        # Cancel any pending timers if the entity is disabled
+        if not self.enabled:
+            self._cancel_call_later()
+
+    async def async_entity_registry_updated(self) -> None:
+        """Handle entity registry update."""
+        await super().async_entity_registry_updated()
+
+        # Cancel any pending timers if the entity is disabled
+        if not self.enabled:
+            self._cancel_call_later()
 
     def _cancel_call_later(self) -> None:
         """Cancel any pending call_later."""
@@ -115,10 +138,20 @@ class CalendarEventBinarySensor(BinarySensorEntity):
     async def _state_changed(self, event: Event) -> None:
         """Handle calendar entity state changes."""
         if event.data.get("entity_id") == self._calendar_entity_id:
-            await self._update_state()
+            # Only update state if the entity is enabled
+            if self.enabled:
+                await self._update_state()
+            else:
+                # Cancel any pending timers if disabled
+                self._cancel_call_later()
 
     async def _update_state(self) -> None:
         """Update the binary sensor state based on calendar events."""
+
+        # Don't update if the entity is disabled
+        if not self.enabled:
+            self._cancel_call_later()
+            return
 
         calendar_state = self._hass.states.get(self._calendar_entity_id)
 
