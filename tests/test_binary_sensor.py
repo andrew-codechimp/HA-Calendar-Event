@@ -50,13 +50,13 @@ async def mock_calendar_entity(hass: HomeAssistant, entity_registry: er.EntityRe
         # Contains tests
         ("contains", "meeting", "Team Meeting", True),
         ("contains", "meeting", "Daily Standup", False),
-        ("contains", "doctor", "Doctor Appointment", True),
+        ("contains", "doctor", "Doctors Appointment", True),
         ("contains", "vacation", "Back from vacation", True),
         ("contains", "party", "Birthday celebration", False),
         # Starts with tests
         ("starts_with", "meeting", "Meeting with client", True),
         ("starts_with", "meeting", "Team Meeting", False),
-        ("starts_with", "doctor", "Doctor visit", True),
+        ("starts_with", "doctor", "Doctors visit", True),
         ("starts_with", "appointment", "Doctor Appointment", False),
         # Ends with tests
         ("ends_with", "meeting", "Daily Meeting", True),
@@ -333,7 +333,7 @@ async def test_binary_sensor_default_comparison_method(
     [
         # Contains tests
         ("contains", "meeting", "Team Meeting", True),
-        ("contains", "MEETING", "team meeting", True),  # Case insensitive
+        ("contains", "MEET", "team meeting", True),  # Case insensitive
         ("contains", "meeting", "Daily Standup", False),
         # Starts with tests
         ("starts_with", "meeting", "Meeting with client", True),
