@@ -7,11 +7,13 @@
                 "data": {
                     "name": "Name",
                     "calendar_entity_id": "Calendar",
-                    "summary": "Summary"
+                    "summary": "Summary",
+                    "comparison_method": "Comparison Method"
                 },
                 "data_description": {
                     "calendar_entity_id": "The calendar entity to monitor for events.",
-                    "summary": "The calendar event summary text to match."
+                    "summary": "The calendar event summary text to match, matching will be case-insensitive.",
+                    "comparison_method": "How to match the summary text."
                 }
             }
         }
@@ -23,12 +25,24 @@
                 "description": "Configure the calendar event options.",
                 "data": {
                     "calendar_entity_id": "Calendar",
-                    "summary": "Summary"
+                    "summary": "Summary",
+                    "comparison_method": "Comparison Method"
                 },
                 "data_description": {
                     "calendar_entity_id": "The calendar entity to monitor for events.",
-                    "summary": "The calendar event summary text to match."
+                    "summary": "The calendar event summary text to match, matching will be case-insensitive.",
+                    "comparison_method": "How to match the summary text."
                 }
+            }
+        }
+    },
+    "selector": {
+        "comparison_method": {
+            "options": {
+                "contains": "Contains",
+                "starts_with": "Starts with",
+                "ends_with": "Ends with",
+                "exactly": "Exactly"
             }
         }
     }

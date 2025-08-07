@@ -14,9 +14,12 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .const import (
     CONF_CALENDAR_ENTITY_ID,
+    CONF_COMPARISON_METHOD,
     CONF_SUMMARY,
     DOMAIN,
 )
+
+_MATCHING_CRITERIA = ["contains", "starts_with", "ends_with", "exactly"]
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -24,6 +27,13 @@ OPTIONS_SCHEMA = vol.Schema(
             selector.EntitySelectorConfig(domain="calendar")
         ),
         vol.Required(CONF_SUMMARY): selector.TextSelector(),
+        vol.Required(
+            CONF_COMPARISON_METHOD, default="contains"
+        ): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=_MATCHING_CRITERIA, translation_key=CONF_COMPARISON_METHOD
+            ),
+        ),
     }
 )
 

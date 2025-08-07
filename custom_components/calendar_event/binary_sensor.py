@@ -10,7 +10,12 @@ from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_DESCRIPTION, CONF_CALENDAR_ENTITY_ID, CONF_SUMMARY
+from .const import (
+    ATTR_DESCRIPTION,
+    CONF_CALENDAR_ENTITY_ID,
+    CONF_COMPARISON_METHOD,
+    CONF_SUMMARY,
+)
 
 
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -28,6 +33,9 @@ async def async_setup_entry(
     name: str | None = config_entry.options.get("name")
     calendar_entity: str = config_entry.options[CONF_CALENDAR_ENTITY_ID]
     summary: str = config_entry.options[CONF_SUMMARY]
+    comparison_method: str = config_entry.options.get(
+        CONF_COMPARISON_METHOD, "contains"
+    )
     unique_id = config_entry.entry_id
 
     config_entry.async_on_unload(
@@ -43,6 +51,7 @@ async def async_setup_entry(
                 unique_id,
                 calendar_entity,
                 summary,
+                comparison_method,
             )
         ]
     )
@@ -65,12 +74,14 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         unique_id: str | None,
         calendar_entity_id: str,
         summary: str,
+        comparison_method: str,
     ) -> None:
         """Initialize the Calendar Event sensor."""
         self._attr_unique_id = unique_id
         self._attr_name = name
         self._calendar_entity_id = calendar_entity_id
         self._summary = summary
+        self._comparison_method = comparison_method
         self._hass = hass
         self._config_entry = config_entry
 
@@ -135,6 +146,23 @@ class CalendarEventBinarySensor(BinarySensorEntity):
                 lambda: self._hass.async_create_task(self._update_state()),
             )
 
+    def _matches_criteria(self, event_summary: str) -> bool:
+        """Check if event summary matches the configured criteria."""
+        event_summary_lower = event_summary.lower()
+        summary_lower = self._summary.lower()
+
+        if self._comparison_method == "contains":
+            return summary_lower in event_summary_lower
+        elif self._comparison_method == "starts_with":
+            return event_summary_lower.startswith(summary_lower)
+        elif self._comparison_method == "ends_with":
+            return event_summary_lower.endswith(summary_lower)
+        elif self._comparison_method == "exactly":
+            return event_summary_lower == summary_lower
+        else:
+            # Default to contains if unknown criteria
+            return summary_lower in event_summary_lower
+
     async def _get_event_matching_summary(self) -> Event | None:
         """Check if the summary is in the calendar events."""
 
@@ -157,7 +185,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         for event in calendar_events:
             if not isinstance(event, dict):
                 continue
-            if self._summary.lower() in event.get("summary", "").lower():
+            if self._matches_criteria(event.get("summary", "")):
                 return event
 
         return None
