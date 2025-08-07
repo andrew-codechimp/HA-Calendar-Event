@@ -12,7 +12,8 @@ Do not use until there is a 1.x release, things are subject to breaking changes.
 
 Calendar event helper for Home Assistant
 
-Allows creation of binary sensor helper that looks at the summary of the currently active events for a calendar, turning the sensor on if the summary matches that configured in the helper.
+Allows creation of binary sensor helpers that look at the summary of the currently active events for a calendar, turning the sensor on if the summary matches that configured in the helper.
+
 The description of the calendar event is available as an attribute within the helper.
 
 
