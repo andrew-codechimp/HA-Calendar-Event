@@ -19,7 +19,7 @@ from .const import (
     DOMAIN,
 )
 
-_MATCHING_CRITERIA = ["contains", "starts_with", "ends_with", "exactly"]
+_COMPARISON_METHODS = ["contains", "starts_with", "ends_with", "exactly"]
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -31,7 +31,7 @@ OPTIONS_SCHEMA = vol.Schema(
             CONF_COMPARISON_METHOD, default="contains"
         ): selector.SelectSelector(
             selector.SelectSelectorConfig(
-                options=_MATCHING_CRITERIA,
+                options=_COMPARISON_METHODS,
                 mode="dropdown",
                 translation_key=CONF_COMPARISON_METHOD,
             ),
