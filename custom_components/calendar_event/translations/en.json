@@ -12,7 +12,7 @@
                 },
                 "data_description": {
                     "calendar_entity_id": "The calendar entity to monitor for events.",
-                    "summary": "The calendar event summary text to match, matching will be case-insensitive.",
+                    "summary": "The text to match against in calendar event summaries. Matching is case-insensitive.",
                     "comparison_method": "How to match the summary text."
                 }
             }
@@ -30,7 +30,7 @@
                 },
                 "data_description": {
                     "calendar_entity_id": "The calendar entity to monitor for events.",
-                    "summary": "The calendar event summary text to match, matching will be case-insensitive.",
+                    "summary": "The text to match against in calendar event summaries. Matching is case-insensitive.",
                     "comparison_method": "How to match the summary text."
                 }
             }
