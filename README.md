@@ -53,9 +53,6 @@ A new Calendar Event helper will be available within Settings/Helpers or click t
 
 [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=calendar_event)
 
-### FAQ's
-- Some custom integrations do not report current all day events correctly, if the helper should be on when you first add it you may have to wait until the next event for it to be correct.
-
 
 ### Translations
 
