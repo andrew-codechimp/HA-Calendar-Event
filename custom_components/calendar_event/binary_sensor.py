@@ -196,8 +196,8 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
     def _matches_criteria(self, event_summary: str) -> bool:
         """Check if event summary matches the configured criteria."""
-        event_summary_lower = event_summary.lower()
-        summary_lower = self._summary.lower()
+        event_summary_lower = event_summary.casefold()
+        summary_lower = self._summary.casefold()
 
         if self._comparison_method == "contains":
             return summary_lower in event_summary_lower
