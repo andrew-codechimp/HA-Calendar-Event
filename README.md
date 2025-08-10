@@ -16,6 +16,10 @@ Allows creation of binary sensor helpers that look at the summary of the current
 
 The description of the calendar event is available as an attribute within the helper.
 
+Using the built-in calendar state within a template does not handle multiple events at the same time; it is on if any event is active and the message attribute only displays one of the events, or an upcoming event, making it very hard to use in a dashboard.
+
+Calendar Event helpers detect when a calendar state is on, and while it's on they will locally compare all current events every minute against the criteria specified, allowing for multiple calendar events to overlap within the same calendar. They will not refresh external calendars such as CalDAV; that schedule is determined by the integration for the calendar.
+
 
 _Please :star: this repo if you find it useful_  
 _If you want to show your support please_
