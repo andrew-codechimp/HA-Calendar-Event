@@ -7,9 +7,6 @@
 [![License][license-shield]](LICENSE)
 <!-- [![hacs][hacsbadge]][hacs] -->
 
-# WORK IN PROGRESS
-Do not use until there is a 1.x release, things are subject to breaking changes.  
-
 Calendar event helper for Home Assistant
 
 Allows creation of binary sensor helpers that look at the summary of the currently active events for a calendar, turning the sensor on if the summary matches that configured in the helper.
