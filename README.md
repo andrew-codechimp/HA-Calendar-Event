@@ -5,7 +5,7 @@
 [![Downloads][download-latest-shield]]()
 [![HACS Installs][hacs-installs-shield]]()
 [![License][license-shield]](LICENSE)
-<!-- [![hacs][hacsbadge]][hacs] -->
+[![hacs][hacsbadge]][hacs]
 
 Calendar event helper for Home Assistant
 
