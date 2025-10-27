@@ -5,17 +5,18 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 import pytest
-from homeassistant import config_entries
-from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-
 from custom_components.calendar_event.const import (
-    CONF_CALENDAR_ENTITY_ID,
-    CONF_COMPARISON_METHOD,
-    CONF_SUMMARY,
     DOMAIN,
+    CONF_SUMMARY,
+    CONF_COMPARISON_METHOD,
+    CONF_CALENDAR_ENTITY_ID,
 )
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_NAME
+from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.mark.parametrize(
@@ -52,7 +53,7 @@ from custom_components.calendar_event.const import (
         ),
     ],
 )
-async def test_config_flow(
+async def test_config_flow(  # noqa: PLR0913
     hass: HomeAssistant,
     name: str,
     calendar_entity_id: str,
@@ -99,7 +100,6 @@ async def test_options_flow(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the options flow."""
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
 
     # Create a config entry
     config_entry = MockConfigEntry(

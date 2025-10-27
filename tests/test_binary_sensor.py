@@ -3,17 +3,18 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from custom_components.calendar_event.const import (
+    DOMAIN,
+    CONF_SUMMARY,
+    ATTR_DESCRIPTION,
+    CONF_COMPARISON_METHOD,
+    CONF_CALENDAR_ENTITY_ID,
+)
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+from custom_components.calendar_event.binary_sensor import CalendarEventBinarySensor
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from custom_components.calendar_event.const import (
-    ATTR_DESCRIPTION,
-    CONF_CALENDAR_ENTITY_ID,
-    CONF_COMPARISON_METHOD,
-    CONF_SUMMARY,
-    DOMAIN,
-)
 
 from . import setup_integration
 
@@ -70,13 +71,13 @@ async def mock_calendar_entity(hass: HomeAssistant, entity_registry: er.EntityRe
         ("exactly", "vacation", "Vacation time", False),
     ],
 )
-async def test_binary_sensor_matching_criteria(
+async def test_binary_sensor_matching_criteria(  # noqa: PLR0913
     hass: HomeAssistant,
     mock_calendar_entity: er.RegistryEntry,
     comparison_method: str,
     summary_text: str,
     event_summary: str,
-    expected_match: bool,
+    expected_match: bool,  # noqa: FBT001
 ) -> None:
     """Test binary sensor with different matching criteria."""
 
@@ -358,10 +359,9 @@ def test_matches_criteria_logic(
     comparison_method: str,
     summary_text: str,
     event_summary: str,
-    expected_match: bool,
+    expected_match: bool,  # noqa: FBT001
 ) -> None:
     """Test the matching criteria logic directly."""
-    from custom_components.calendar_event.binary_sensor import CalendarEventBinarySensor
 
     # Create a mock sensor to test the matching logic
     sensor = CalendarEventBinarySensor(
@@ -374,7 +374,7 @@ def test_matches_criteria_logic(
         comparison_method=comparison_method,
     )
 
-    result = sensor._matches_criteria(event_summary)
+    result = sensor._matches_criteria(event_summary)  # noqa: SLF001
     assert result == expected_match
 
 
@@ -490,10 +490,10 @@ async def test_binary_sensor_enabled_schedules_call_later(
 
             # Verify the call_later was scheduled with correct parameters
             call_args = mock_call_later.call_args
-            assert len(call_args[0]) == 2  # delay and callback
+            assert len(call_args[0]) == 2  # noqa: PLR2004
             delay = call_args[0][0]
             assert isinstance(delay, (int, float))
-            assert 0 < delay <= 60  # Should be between 0 and 60 seconds
+            assert 0 < delay <= 60  # noqa: PLR2004
 
 
 async def test_binary_sensor_cancels_call_later_when_disabled(

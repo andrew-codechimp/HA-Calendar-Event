@@ -1,8 +1,9 @@
 """Tests for calendar_event integration."""
 
 import pytest
-from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant.core import HomeAssistant
 
 pytestmark = pytest.mark.asyncio
 

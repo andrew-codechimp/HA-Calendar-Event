@@ -8,20 +8,20 @@ from __future__ import annotations
 
 import voluptuous as vol
 from awesomeversion.awesomeversion import AwesomeVersion
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import __version__ as HA_VERSION  # noqa: N812
+
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
+from homeassistant.const import __version__ as HA_VERSION  # noqa: N812
+from homeassistant.helpers import entity_registry as er, config_validation as cv
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
 
 from .const import (
-    CONF_CALENDAR_ENTITY_ID,
     DOMAIN,
     LOGGER,
-    MIN_HA_VERSION,
     PLATFORMS,
+    MIN_HA_VERSION,
+    CONF_CALENDAR_ENTITY_ID,
 )
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
