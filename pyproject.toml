@@ -75,11 +75,19 @@ ignore = [
   "Q003",
   "W191",
   "RUF012", # Broken rule in some cases
+
+  "S101",   # Allow use of assert statements
+  "TC001",
+  "ARG001",
+
 ]
 
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ANN201"] # Missing return type annotation for test functions
 
 [tool.ruff.lint.isort]
 length-sort = true

@@ -2,20 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .const import (
-    ATTR_DESCRIPTION,
-    CONF_CALENDAR_ENTITY_ID,
-    CONF_COMPARISON_METHOD,
     CONF_SUMMARY,
+    ATTR_DESCRIPTION,
+    CONF_COMPARISON_METHOD,
+    CONF_CALENDAR_ENTITY_ID,
 )
 
 
@@ -67,7 +67,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
     _state_dict: dict[str, str] = {}
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
@@ -109,7 +109,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         await self._update_state()
 
     @callback
-    def _entity_registry_updated(self, event: Event) -> None:
+    def _entity_registry_updated(self, event: Event) -> None:  # noqa: ARG002
         """Handle entity registry update."""
         # Cancel any pending timers if the entity is disabled
         if not self.enabled:
@@ -187,7 +187,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         # Schedule next update only if calendar is on and entity is enabled
         if calendar_state.state == "on" and self.enabled:
-            now = datetime.now()
+            now = datetime.now(tz=UTC)
             seconds_until_next_minute = 60 - now.second
             self._call_later_handle = self._hass.loop.call_later(
                 seconds_until_next_minute,
@@ -201,21 +201,20 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         if self._comparison_method == "contains":
             return summary_lower in event_summary_lower
-        elif self._comparison_method == "starts_with":
+        if self._comparison_method == "starts_with":
             return event_summary_lower.startswith(summary_lower)
-        elif self._comparison_method == "ends_with":
+        if self._comparison_method == "ends_with":
             return event_summary_lower.endswith(summary_lower)
-        elif self._comparison_method == "exactly":
+        if self._comparison_method == "exactly":
             return event_summary_lower == summary_lower
-        else:
-            # Default to contains if unknown criteria
-            return summary_lower in event_summary_lower
+        # Default to contains if unknown criteria
+        return summary_lower in event_summary_lower
 
     async def _get_event_matching_summary(self) -> Event | None:
         """Check if the summary is in the calendar events."""
 
         # Fetch all events for the calendar entity using the get_events service
-        now = datetime.now()
+        now = datetime.now(tz=UTC)
         end_date_time = (now + timedelta(hours=1)).isoformat()
 
         events = await self._hass.services.async_call(

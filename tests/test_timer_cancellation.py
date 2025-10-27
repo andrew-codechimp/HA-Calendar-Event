@@ -5,11 +5,11 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+from custom_components.calendar_event.binary_sensor import CalendarEventBinarySensor
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import RegistryEntry
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from custom_components.calendar_event.binary_sensor import CalendarEventBinarySensor
 
 
 @pytest.mark.asyncio
@@ -41,7 +41,7 @@ async def test_timer_cancelled_when_entity_disabled_directly(
 
     # Create a mock handle for the timer
     mock_handle = MagicMock()
-    entity._call_later_handle = mock_handle
+    entity._call_later_handle = mock_handle  # noqa: SLF001
 
     # Mock registry entry as disabled
     mock_registry_entry = MagicMock(spec=RegistryEntry)
@@ -50,11 +50,11 @@ async def test_timer_cancelled_when_entity_disabled_directly(
     with patch.object(entity, "registry_entry", mock_registry_entry):
         # Simulate the entity registry update callback
         mock_event = MagicMock()
-        entity._entity_registry_updated(mock_event)
+        entity._entity_registry_updated(mock_event)  # noqa: SLF001
 
         # Verify the timer was cancelled
         mock_handle.cancel.assert_called_once()
-        assert entity._call_later_handle is None
+        assert entity._call_later_handle is None  # noqa: SLF001
 
 
 @pytest.mark.asyncio
@@ -91,7 +91,7 @@ async def test_timer_not_scheduled_when_disabled(hass: HomeAssistant) -> None:
         patch.object(hass.loop, "call_later") as mock_call_later,
     ):
         # Try to update state when disabled
-        await entity._update_state()
+        await entity._update_state()  # noqa: SLF001
 
         # Verify no timer was scheduled
         mock_call_later.assert_not_called()
@@ -126,7 +126,7 @@ async def test_timer_cancelled_in_state_changed_when_disabled(
 
     # Create a mock handle for the timer
     mock_handle = MagicMock()
-    entity._call_later_handle = mock_handle
+    entity._call_later_handle = mock_handle  # noqa: SLF001
 
     # Mock registry entry as disabled
     mock_registry_entry = MagicMock(spec=RegistryEntry)
@@ -138,8 +138,8 @@ async def test_timer_cancelled_in_state_changed_when_disabled(
         mock_event.data = {"entity_id": "calendar.test"}
 
         # Call the state changed callback
-        await entity._state_changed(mock_event)
+        await entity._state_changed(mock_event)  # noqa: SLF001
 
         # Verify the timer was cancelled
         mock_handle.cancel.assert_called_once()
-        assert entity._call_later_handle is None
+        assert entity._call_later_handle is None  # noqa: SLF001
