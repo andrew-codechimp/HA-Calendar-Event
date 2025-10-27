@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.util.dt import utcnow
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -187,7 +188,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         # Schedule next update only if calendar is on and entity is enabled
         if calendar_state.state == "on" and self.enabled:
-            now = datetime.now(tz=UTC)
+            now = utcnow()
             seconds_until_next_minute = 60 - now.second
             self._call_later_handle = self._hass.loop.call_later(
                 seconds_until_next_minute,
@@ -214,7 +215,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         """Check if the summary is in the calendar events."""
 
         # Fetch all events for the calendar entity using the get_events service
-        now = datetime.now(tz=UTC)
+        now = utcnow()
         end_date_time = (now + timedelta(hours=1)).isoformat()
 
         events = await self._hass.services.async_call(
