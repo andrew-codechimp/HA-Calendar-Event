@@ -11,6 +11,7 @@ from custom_components.calendar_event.const import (
     CONF_COMPARISON_METHOD,
     CONF_CALENDAR_ENTITY_ID,
 )
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
@@ -52,7 +53,7 @@ from homeassistant.data_entry_flow import FlowResultType
         ),
     ],
 )
-async def test_config_flow(
+async def test_config_flow(  # noqa: PLR0913
     hass: HomeAssistant,
     name: str,
     calendar_entity_id: str,
@@ -99,7 +100,6 @@ async def test_options_flow(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the options flow."""
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
 
     # Create a config entry
     config_entry = MockConfigEntry(

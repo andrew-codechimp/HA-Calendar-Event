@@ -79,7 +79,7 @@ ignore = [
   "S101",   # Allow use of assert statements
   "TC001",
   "ARG001",
-
+  "TC003",
 ]
 
 
