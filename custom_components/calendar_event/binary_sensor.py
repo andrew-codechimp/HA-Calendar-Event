@@ -4,18 +4,18 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .const import (
-    ATTR_DESCRIPTION,
-    CONF_CALENDAR_ENTITY_ID,
-    CONF_COMPARISON_METHOD,
     CONF_SUMMARY,
+    ATTR_DESCRIPTION,
+    CONF_COMPARISON_METHOD,
+    CONF_CALENDAR_ENTITY_ID,
 )
 
 
@@ -201,15 +201,14 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         if self._comparison_method == "contains":
             return summary_lower in event_summary_lower
-        elif self._comparison_method == "starts_with":
+        if self._comparison_method == "starts_with":
             return event_summary_lower.startswith(summary_lower)
-        elif self._comparison_method == "ends_with":
+        if self._comparison_method == "ends_with":
             return event_summary_lower.endswith(summary_lower)
-        elif self._comparison_method == "exactly":
+        if self._comparison_method == "exactly":
             return event_summary_lower == summary_lower
-        else:
-            # Default to contains if unknown criteria
-            return summary_lower in event_summary_lower
+        # Default to contains if unknown criteria
+        return summary_lower in event_summary_lower
 
     async def _get_event_matching_summary(self) -> Event | None:
         """Check if the summary is in the calendar events."""

@@ -2,21 +2,22 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any, cast
+from collections.abc import Mapping
 
 import voluptuous as vol
+
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaConfigFlowHandler,
     SchemaFlowFormStep,
+    SchemaConfigFlowHandler,
 )
 
 from .const import (
-    CONF_CALENDAR_ENTITY_ID,
-    CONF_COMPARISON_METHOD,
-    CONF_SUMMARY,
     DOMAIN,
+    CONF_SUMMARY,
+    CONF_COMPARISON_METHOD,
+    CONF_CALENDAR_ENTITY_ID,
 )
 
 _COMPARISON_METHODS = ["contains", "starts_with", "ends_with", "exactly"]

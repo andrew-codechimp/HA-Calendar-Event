@@ -5,11 +5,11 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+from custom_components.calendar_event.binary_sensor import CalendarEventBinarySensor
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import RegistryEntry
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from custom_components.calendar_event.binary_sensor import CalendarEventBinarySensor
 
 
 @pytest.mark.asyncio

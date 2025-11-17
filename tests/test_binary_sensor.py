@@ -3,17 +3,17 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from custom_components.calendar_event.const import (
+    DOMAIN,
+    CONF_SUMMARY,
+    ATTR_DESCRIPTION,
+    CONF_COMPARISON_METHOD,
+    CONF_CALENDAR_ENTITY_ID,
+)
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.calendar_event.const import (
-    ATTR_DESCRIPTION,
-    CONF_CALENDAR_ENTITY_ID,
-    CONF_COMPARISON_METHOD,
-    CONF_SUMMARY,
-    DOMAIN,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 

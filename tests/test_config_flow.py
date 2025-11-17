@@ -5,17 +5,17 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 import pytest
-from homeassistant import config_entries
-from homeassistant.const import CONF_NAME
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-
 from custom_components.calendar_event.const import (
-    CONF_CALENDAR_ENTITY_ID,
-    CONF_COMPARISON_METHOD,
-    CONF_SUMMARY,
     DOMAIN,
+    CONF_SUMMARY,
+    CONF_COMPARISON_METHOD,
+    CONF_CALENDAR_ENTITY_ID,
 )
+
+from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_NAME
+from homeassistant.data_entry_flow import FlowResultType
 
 
 @pytest.mark.parametrize(
