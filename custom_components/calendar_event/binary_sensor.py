@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from asyncio import TimerHandle
+from datetime import timedelta
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.util.dt import utcnow
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -88,7 +90,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         self._attr_is_on = False
         self._attr_extra_state_attributes = {}
-        self._call_later_handle = None
+        self._call_later_handle: TimerHandle | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
@@ -96,13 +98,15 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         # Add state listener for the calendar entity
         self.async_on_remove(
-            self._hass.bus.async_listen(EVENT_STATE_CHANGED, self._state_changed)
+            self._hass.bus.async_listen(EVENT_STATE_CHANGED, self._state_changed)  # type: ignore[arg-type]
         )
 
         # Track entity registry updates to detect when entity is disabled/enabled
         self.async_on_remove(
             async_track_entity_registry_updated_event(
-                self._hass, self.entity_id, self._entity_registry_updated
+                self._hass,
+                self.entity_id,
+                self._entity_registry_updated,  # type: ignore[arg-type]
             )
         )
 
@@ -111,14 +115,6 @@ class CalendarEventBinarySensor(BinarySensorEntity):
     @callback
     def _entity_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""
-        # Cancel any pending timers if the entity is disabled
-        if not self.enabled:
-            self._cancel_call_later()
-
-    async def async_entity_registry_updated(self) -> None:
-        """Handle entity registry update."""
-        await super().async_entity_registry_updated()
-
         # Cancel any pending timers if the entity is disabled
         if not self.enabled:
             self._cancel_call_later()
@@ -187,7 +183,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         # Schedule next update only if calendar is on and entity is enabled
         if calendar_state.state == "on" and self.enabled:
-            now = datetime.now()
+            now = utcnow()
             seconds_until_next_minute = 60 - now.second
             self._call_later_handle = self._hass.loop.call_later(
                 seconds_until_next_minute,
@@ -210,11 +206,11 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         # Default to contains if unknown criteria
         return summary_lower in event_summary_lower
 
-    async def _get_event_matching_summary(self) -> Event | None:
+    async def _get_event_matching_summary(self) -> dict | None:
         """Check if the summary is in the calendar events."""
 
         # Fetch all events for the calendar entity using the get_events service
-        now = datetime.now()
+        now = utcnow()
         end_date_time = (now + timedelta(hours=1)).isoformat()
 
         events = await self._hass.services.async_call(
@@ -228,11 +224,21 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             return_response=True,
         )
 
-        calendar_events = events.get(self._calendar_entity_id, {}).get("events", [])
+        if not isinstance(events, dict):
+            return None
+
+        calendar_data = events.get(self._calendar_entity_id, {})
+        if not isinstance(calendar_data, dict):
+            return None
+
+        calendar_events = calendar_data.get("events", [])
+        if not isinstance(calendar_events, list):
+            return None
         for event in calendar_events:
             if not isinstance(event, dict):
                 continue
-            if self._matches_criteria(event.get("summary", "")):
+            summary = event.get("summary", "")
+            if isinstance(summary, str) and self._matches_criteria(summary):
                 return event
 
         return None
