@@ -31,26 +31,26 @@ jobs:
         with:
           args: format --check --diff
 
-  # mypy:
-  #   runs-on: ubuntu-latest
+  mypy:
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-  #     - name: Install uv
-  #       uses: astral-sh/setup-uv@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
 
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v6
-  #       with:
-  #         python-version-file: "pyproject.toml"
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "pyproject.toml"
 
-  #     - name: Install dependencies
-  #       run: uv sync
+      - name: Install dependencies
+        run: uv sync
 
-  #     - name: Run mypy
-  #       run: uv run mypy
+      - name: Run mypy
+        run: uv run mypy
 
   tests:
     runs-on: ubuntu-latest

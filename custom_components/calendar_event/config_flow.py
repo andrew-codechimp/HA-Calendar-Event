@@ -33,7 +33,7 @@ OPTIONS_SCHEMA = vol.Schema(
         ): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=_COMPARISON_METHODS,
-                mode="dropdown",
+                mode=selector.SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_COMPARISON_METHOD,
             ),
         ),
