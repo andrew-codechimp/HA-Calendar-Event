@@ -8,6 +8,7 @@ from datetime import timedelta
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.util.dt import utcnow
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -213,16 +214,20 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         now = utcnow()
         end_date_time = (now + timedelta(hours=1)).isoformat()
 
-        events = await self._hass.services.async_call(
-            "calendar",
-            "get_events",
-            {
-                "entity_id": self._calendar_entity_id,
-                "end_date_time": end_date_time,
-            },
-            blocking=True,
-            return_response=True,
-        )
+        try:
+            events = await self._hass.services.async_call(
+                "calendar",
+                "get_events",
+                {
+                    "entity_id": self._calendar_entity_id,
+                    "end_date_time": end_date_time,
+                },
+                blocking=True,
+                return_response=True,
+            )
+        except HomeAssistantError:
+            # The service call can fail when the calendar is not available
+            return None
 
         if not isinstance(events, dict):
             return None
