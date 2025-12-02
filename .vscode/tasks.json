@@ -6,6 +6,106 @@
             "type": "shell",
             "command": "scripts/develop",
             "problemMatcher": []
+        },
+        {
+            "label": "Run Tests",
+            "type": "shell",
+            "command": "uv run pytest tests/ -v",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Run Tests with Coverage",
+            "type": "shell",
+            "command": "uv run pytest tests/ --cov=custom_components.calendar_event --cov-report=term-missing -v",
+            "group": "test",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Run Mypy",
+            "type": "shell",
+            "command": "uv run mypy custom_components/calendar_event",
+            "group": "test",
+            "problemMatcher": [
+                {
+                    "owner": "mypy",
+                    "pattern": [
+                        {
+                            "regexp": "^(.+?):(\\d+):(\\d+)?: (error|warning|note): (.+)$",
+                            "file": 1,
+                            "line": 2,
+                            "column": 3,
+                            "severity": 4,
+                            "message": 5
+                        }
+                    ]
+                }
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Run Ruff Check",
+            "type": "shell",
+            "command": "uv run ruff check",
+            "group": "test",
+            "problemMatcher": [
+                {
+                    "owner": "ruff",
+                    "pattern": [
+                        {
+                            "regexp": "^(.+?):(\\d+):(\\d+): ([A-Z]+\\d+) (.+)$",
+                            "file": 1,
+                            "line": 2,
+                            "column": 3,
+                            "code": 4,
+                            "message": 5
+                        }
+                    ]
+                }
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Run Ruff Fix",
+            "type": "shell",
+            "command": "uv run ruff check --fix",
+            "group": "test",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Run All Checks (Lint Script)",
+            "type": "shell",
+            "command": "scripts/lint",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
         }
     ],
     "configurations": [
