@@ -6,6 +6,7 @@ from asyncio import TimerHandle
 from datetime import timedelta
 
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.util import dt as dt_util
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.util.dt import utcnow
 from homeassistant.exceptions import HomeAssistantError
@@ -152,7 +153,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         calendar_state = self._hass.states.get(self._calendar_entity_id)
 
-        if calendar_state is None:
+        if calendar_state is None or calendar_state.state == "off":
             self._attr_is_on = False
             self._attr_extra_state_attributes.update(
                 {
@@ -242,8 +243,18 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         for event in calendar_events:
             if not isinstance(event, dict):
                 continue
-            summary = event.get("summary", "")
-            if isinstance(summary, str) and self._matches_criteria(summary):
-                return event
+            start = event.get("start")
+            if not isinstance(start, str):
+                continue
+            try:
+                start_dt = dt_util.parse_datetime(start)
+                if start_dt is None:
+                    continue
+            except (ValueError, TypeError):
+                continue
+            if start_dt <= utcnow():
+                summary = event.get("summary", "")
+                if isinstance(summary, str) and self._matches_criteria(summary):
+                    return event
 
         return None
