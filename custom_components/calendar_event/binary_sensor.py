@@ -250,6 +250,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
                 start_dt = dt_util.parse_datetime(start)
                 if start_dt is None:
                     continue
+                start_dt = dt_util.as_utc(start_dt)
             except (ValueError, TypeError):
                 continue
             if start_dt <= utcnow():
