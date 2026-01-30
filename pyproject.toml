@@ -27,11 +27,11 @@ Changelog = "https://github.com/andrew-codechimp/HA-Calendar-Event/releases"
 
 [dependency-groups]
 dev = [
-    "aiodns<4.0.0",
+    "aiodns<4.0.1",
     "colorlog",
     "homeassistant==2025.7.0",
     "mypy",
-    "pycares<5.0.0",
+    "pycares<5.0.2",
     "pygments",
     "pytest-homeassistant-custom-component",
     "ruff",
