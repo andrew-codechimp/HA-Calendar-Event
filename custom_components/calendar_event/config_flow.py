@@ -42,10 +42,13 @@ OPTIONS_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required("name"): selector.TextSelector(),
+        vol.Required("name"): selector.TextSelector(
+            selector.TextSelectorConfig(
+                type=selector.TextSelectorType.TEXT, autocomplete="off"
+            ),
+        )
     }
 ).extend(OPTIONS_SCHEMA.schema)
-
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(CONFIG_SCHEMA),
