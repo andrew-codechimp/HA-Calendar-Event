@@ -2,7 +2,7 @@
     "config": {
         "step": {
             "user": {
-                "title": "Calendar Event",
+                "title": "Create Calendar Event",
                 "description": "Create a binary sensor that is on if the calendar event meets the criteria.",
                 "data": {
                     "name": "Name",
