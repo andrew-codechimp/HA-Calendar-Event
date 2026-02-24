@@ -1,4 +1,4 @@
-# HA-Calendar-Event
+# Calendar Event
 
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
