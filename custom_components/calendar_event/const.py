@@ -8,6 +8,7 @@ LOGGER: Logger = getLogger(__package__)
 
 MIN_HA_VERSION = "2025.7"
 
+DOMAIN = "calendar_event"
 CONFIG_VERSION = 1
 
 PLATFORMS = [Platform.BINARY_SENSOR]
