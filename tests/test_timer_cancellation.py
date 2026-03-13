@@ -138,7 +138,7 @@ async def test_timer_cancelled_in_state_changed_when_disabled(
         mock_event.data = {"entity_id": "calendar.test"}
 
         # Call the state changed callback
-        await entity._state_changed(mock_event)
+        entity._state_changed(mock_event)
 
         # Verify the timer was cancelled
         mock_handle.cancel.assert_called_once()
