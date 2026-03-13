@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from asyncio import TimerHandle
+from asyncio import Task, TimerHandle
 from datetime import timedelta
 
 from homeassistant.core import Event, HomeAssistant, callback
@@ -93,6 +93,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         self._attr_is_on = False
         self._attr_extra_state_attributes = {}
         self._call_later_handle: TimerHandle | None = None
+        self._update_task: Task | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
@@ -112,14 +113,15 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             )
         )
 
-        await self._update_state()
+        self._schedule_update()
 
     @callback
     def _entity_registry_updated(self, event: Event) -> None:
         """Handle entity registry update."""
-        # Cancel any pending timers if the entity is disabled
+        # Cancel any pending timers and tasks if the entity is disabled
         if not self.enabled:
             self._cancel_call_later()
+            self._cancel_update_task()
 
     def _cancel_call_later(self) -> None:
         """Cancel any pending call_later."""
@@ -127,21 +129,35 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             self._call_later_handle.cancel()
             self._call_later_handle = None
 
+    def _cancel_update_task(self) -> None:
+        """Cancel any in-progress update task."""
+        if self._update_task is not None:
+            self._update_task.cancel()
+            self._update_task = None
+
+    def _schedule_update(self) -> None:
+        """Cancel any pending update and schedule a fresh one."""
+        self._cancel_call_later()
+        self._cancel_update_task()
+        self._update_task = self._hass.async_create_task(self._update_state())
+
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity removal."""
         self._cancel_call_later()
+        self._cancel_update_task()
         await super().async_will_remove_from_hass()
 
     @callback
-    async def _state_changed(self, event: Event) -> None:
+    def _state_changed(self, event: Event) -> None:
         """Handle calendar entity state changes."""
         if event.data.get("entity_id") == self._calendar_entity_id:
             # Only update state if the entity is enabled
             if self.enabled:
-                await self._update_state()
+                self._schedule_update()
             else:
-                # Cancel any pending timers if disabled
+                # Cancel any pending timers and tasks if disabled
                 self._cancel_call_later()
+                self._cancel_update_task()
 
     async def _update_state(self) -> None:
         """Update the binary sensor state based on calendar events."""
@@ -183,13 +199,19 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         self._cancel_call_later()
 
-        # Schedule next update only if calendar is on and entity is enabled
-        if calendar_state.state == "on" and self.enabled:
+        # Re-read calendar state after the await to avoid scheduling based on stale data
+        current_calendar_state = self._hass.states.get(self._calendar_entity_id)
+        # Schedule next update only if calendar is still on and entity is enabled
+        if (
+            current_calendar_state is not None
+            and current_calendar_state.state == "on"
+            and self.enabled
+        ):
             now = utcnow()
             seconds_until_next_minute = 60 - now.second
             self._call_later_handle = self._hass.loop.call_later(
                 seconds_until_next_minute,
-                lambda: self._hass.async_create_task(self._update_state()),
+                self._schedule_update,
             )
 
     def _matches_criteria(self, event_summary: str) -> bool:
