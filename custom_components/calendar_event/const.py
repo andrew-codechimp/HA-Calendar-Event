@@ -16,5 +16,8 @@ PLATFORMS = [Platform.BINARY_SENSOR]
 CONF_CALENDAR_ENTITY_ID = "calendar_entity_id"
 CONF_SUMMARY = "summary"
 CONF_COMPARISON_METHOD = "comparison_method"
+CONF_MATCH_ATTRIBUTE = "match_attribute"
 
 ATTR_DESCRIPTION = "description"
+ATTR_LOCATION = "location"
+ATTR_SUMMARY = "summary"

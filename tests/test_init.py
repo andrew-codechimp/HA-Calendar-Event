@@ -7,13 +7,13 @@ from custom_components.calendar_event.const import (
 )
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
-    label_registry as lr,
     device_registry as dr,
     entity_registry as er,
+    label_registry as lr,
 )
-from homeassistant.config_entries import ConfigEntryState
 
 from .const import DEFAULT_NAME
 

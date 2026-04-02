@@ -2,24 +2,25 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
-from collections.abc import Generator
 
 import pytest
 from custom_components.calendar_event.const import (
-    DOMAIN,
-    CONF_SUMMARY,
-    CONF_COMPARISON_METHOD,
     CONF_CALENDAR_ENTITY_ID,
+    CONF_COMPARISON_METHOD,
+    CONF_MATCH_ATTRIBUTE,
+    CONF_SUMMARY,
+    DOMAIN,
 )
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_NAME,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.core import HomeAssistant
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
@@ -54,6 +55,7 @@ async def get_config_to_integration_load() -> dict[str, Any]:
         CONF_CALENDAR_ENTITY_ID: "calendar.my_calendar",
         CONF_SUMMARY: "Test Event",
         CONF_COMPARISON_METHOD: "contains",
+        CONF_MATCH_ATTRIBUTE: "summary",
     }
 
 

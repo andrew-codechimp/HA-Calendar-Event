@@ -6,15 +6,16 @@ from unittest.mock import AsyncMock
 
 import pytest
 from custom_components.calendar_event.const import (
-    DOMAIN,
-    CONF_SUMMARY,
-    CONF_COMPARISON_METHOD,
     CONF_CALENDAR_ENTITY_ID,
+    CONF_COMPARISON_METHOD,
+    CONF_MATCH_ATTRIBUTE,
+    CONF_SUMMARY,
+    DOMAIN,
 )
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
@@ -23,6 +24,7 @@ from homeassistant.data_entry_flow import FlowResultType
         "name",
         "calendar_entity_id",
         "summary",
+        "match_attribute",
         "comparison_method",
     ),
     [
@@ -30,24 +32,28 @@ from homeassistant.data_entry_flow import FlowResultType
             "Test Calendar Event",
             "calendar.my_calendar",
             "Meeting",
+            "summary",
             "contains",
         ),
         (
             "Another Test",
             "calendar.work_calendar",
             "Doctor",
+            "summary",
             "starts_with",
         ),
         (
             "Third Test",
             "calendar.personal",
             "Appointment",
+            "summary",
             "ends_with",
         ),
         (
             "Exact Match Test",
             "calendar.events",
             "Birthday Party",
+            "summary",
             "exactly",
         ),
     ],
@@ -57,6 +63,7 @@ async def test_config_flow(
     name: str,
     calendar_entity_id: str,
     summary: str,
+    match_attribute: str,
     comparison_method: str,
     mock_setup_entry: AsyncMock,
 ) -> None:
@@ -74,6 +81,7 @@ async def test_config_flow(
             CONF_NAME: name,
             CONF_CALENDAR_ENTITY_ID: calendar_entity_id,
             CONF_SUMMARY: summary,
+            CONF_MATCH_ATTRIBUTE: match_attribute,
             CONF_COMPARISON_METHOD: comparison_method,
         },
     )
@@ -88,6 +96,7 @@ async def test_config_flow(
         CONF_NAME: name,
         CONF_CALENDAR_ENTITY_ID: calendar_entity_id,
         CONF_SUMMARY: summary,
+        CONF_MATCH_ATTRIBUTE: match_attribute,
         CONF_COMPARISON_METHOD: comparison_method,
     }
 
@@ -109,6 +118,7 @@ async def test_options_flow(
             CONF_NAME: "Original Name",
             CONF_CALENDAR_ENTITY_ID: "calendar.original",
             CONF_SUMMARY: "Original Summary",
+            CONF_MATCH_ATTRIBUTE: "summary",
             CONF_COMPARISON_METHOD: "contains",
         },
         title="Original Name",
@@ -126,6 +136,7 @@ async def test_options_flow(
         {
             CONF_CALENDAR_ENTITY_ID: "calendar.updated",
             CONF_SUMMARY: "Updated Summary",
+            CONF_MATCH_ATTRIBUTE: "summary",
             CONF_COMPARISON_METHOD: "starts_with",
         },
     )
@@ -137,5 +148,6 @@ async def test_options_flow(
         CONF_NAME: "Original Name",
         CONF_CALENDAR_ENTITY_ID: "calendar.updated",
         CONF_SUMMARY: "Updated Summary",
+        CONF_MATCH_ATTRIBUTE: "summary",
         CONF_COMPARISON_METHOD: "starts_with",
     }
