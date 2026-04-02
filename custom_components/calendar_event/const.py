@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 
 LOGGER: Logger = getLogger(__package__)
 
-MIN_HA_VERSION = "2025.7"
+MIN_HA_VERSION = "2025.12"
 
 DOMAIN = "calendar_event"
 CONFIG_VERSION = 1
