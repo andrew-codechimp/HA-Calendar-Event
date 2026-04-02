@@ -8,8 +8,8 @@ import pytest
 from custom_components.calendar_event.const import (
     CONF_CALENDAR_ENTITY_ID,
     CONF_COMPARISON_METHOD,
+    CONF_MATCH,
     CONF_MATCH_ATTRIBUTE,
-    CONF_SUMMARY,
     DOMAIN,
 )
 
@@ -80,7 +80,7 @@ async def test_config_flow(
         {
             CONF_NAME: name,
             CONF_CALENDAR_ENTITY_ID: calendar_entity_id,
-            CONF_SUMMARY: summary,
+            CONF_MATCH: summary,
             CONF_MATCH_ATTRIBUTE: match_attribute,
             CONF_COMPARISON_METHOD: comparison_method,
         },
@@ -90,12 +90,13 @@ async def test_config_flow(
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("version") == 1
+    assert result.get("minor_version") == 2
     assert result.get("title") == name
 
     assert result.get("options") == {
         CONF_NAME: name,
         CONF_CALENDAR_ENTITY_ID: calendar_entity_id,
-        CONF_SUMMARY: summary,
+        CONF_MATCH: summary,
         CONF_MATCH_ATTRIBUTE: match_attribute,
         CONF_COMPARISON_METHOD: comparison_method,
     }
@@ -117,7 +118,7 @@ async def test_options_flow(
         options={
             CONF_NAME: "Original Name",
             CONF_CALENDAR_ENTITY_ID: "calendar.original",
-            CONF_SUMMARY: "Original Summary",
+            CONF_MATCH: "Original Summary",
             CONF_MATCH_ATTRIBUTE: "summary",
             CONF_COMPARISON_METHOD: "contains",
         },
@@ -135,7 +136,7 @@ async def test_options_flow(
         result["flow_id"],
         {
             CONF_CALENDAR_ENTITY_ID: "calendar.updated",
-            CONF_SUMMARY: "Updated Summary",
+            CONF_MATCH: "Updated Summary",
             CONF_MATCH_ATTRIBUTE: "summary",
             CONF_COMPARISON_METHOD: "starts_with",
         },
@@ -147,7 +148,7 @@ async def test_options_flow(
     assert result.get("data") == {
         CONF_NAME: "Original Name",
         CONF_CALENDAR_ENTITY_ID: "calendar.updated",
-        CONF_SUMMARY: "Updated Summary",
+        CONF_MATCH: "Updated Summary",
         CONF_MATCH_ATTRIBUTE: "summary",
         CONF_COMPARISON_METHOD: "starts_with",
     }

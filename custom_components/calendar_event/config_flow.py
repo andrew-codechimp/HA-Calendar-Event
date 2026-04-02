@@ -16,8 +16,8 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from .const import (
     CONF_CALENDAR_ENTITY_ID,
     CONF_COMPARISON_METHOD,
+    CONF_MATCH,
     CONF_MATCH_ATTRIBUTE,
-    CONF_SUMMARY,
     DOMAIN,
 )
 
@@ -29,7 +29,7 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(CONF_CALENDAR_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="calendar")
         ),
-        vol.Required(CONF_SUMMARY): selector.TextSelector(),
+        vol.Required(CONF_MATCH): selector.TextSelector(),
         vol.Required(CONF_MATCH_ATTRIBUTE, default="summary"): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=_MATCH_ATTRIBUTES,
@@ -75,7 +75,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     options_flow = OPTIONS_FLOW
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

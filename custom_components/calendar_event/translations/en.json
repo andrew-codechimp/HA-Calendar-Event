@@ -9,13 +9,13 @@
                     "comparison_method": "Comparison method",
                     "name": "Name",
                     "match_attribute": "Attribute to match",
-                    "summary": "Text"
+                    "match": "Text"
                 },
                 "data_description": {
                     "calendar_entity_id": "The calendar entity to monitor for events.",
                     "comparison_method": "How to match the attribute.",
                     "match_attribute": "The attribute of the calendar event to match against.",
-                    "summary": "The text to match against in the calendar event. Matching is case-insensitive."
+                    "match": "The text to match against in the calendar event. Matching is case-insensitive."
                 }
             }
         }
@@ -29,13 +29,13 @@
                     "calendar_entity_id": "Calendar",
                     "comparison_method": "Comparison method",
                     "match_attribute": "Attribute to match",
-                    "summary": "Text"
+                    "match": "Text"
                 },
                 "data_description": {
                     "calendar_entity_id": "The calendar entity to monitor for events.",
                     "comparison_method": "How to match the attribute.",
                     "match_attribute": "The attribute of the calendar event to match against.",
-                    "summary": "The text to match against in the calendar event. Matching is case-insensitive."
+                    "match": "The text to match against in the calendar event. Matching is case-insensitive."
                 }
             }
         }

@@ -10,8 +10,8 @@ import pytest
 from custom_components.calendar_event.const import (
     CONF_CALENDAR_ENTITY_ID,
     CONF_COMPARISON_METHOD,
+    CONF_MATCH,
     CONF_MATCH_ATTRIBUTE,
-    CONF_SUMMARY,
     DOMAIN,
 )
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -53,7 +53,7 @@ async def get_config_to_integration_load() -> dict[str, Any]:
     return {
         CONF_NAME: "My calendar_event sensor",
         CONF_CALENDAR_ENTITY_ID: "calendar.my_calendar",
-        CONF_SUMMARY: "Test Event",
+        CONF_MATCH: "Test Event",
         CONF_COMPARISON_METHOD: "contains",
         CONF_MATCH_ATTRIBUTE: "summary",
     }

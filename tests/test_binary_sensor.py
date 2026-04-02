@@ -9,8 +9,8 @@ from custom_components.calendar_event.const import (
     ATTR_SUMMARY,
     CONF_CALENDAR_ENTITY_ID,
     CONF_COMPARISON_METHOD,
+    CONF_MATCH,
     CONF_MATCH_ATTRIBUTE,
-    CONF_SUMMARY,
     DOMAIN,
 )
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -92,7 +92,7 @@ async def test_binary_sensor_matching_criteria(
         options={
             "name": f"Test {comparison_method}",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: match_text,
+            CONF_MATCH: match_text,
             CONF_MATCH_ATTRIBUTE: match_attribute,
             CONF_COMPARISON_METHOD: comparison_method,
         },
@@ -151,7 +151,7 @@ async def test_binary_sensor_no_events(
         options={
             "name": "Test No Events",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
             CONF_MATCH_ATTRIBUTE: "summary",
             CONF_COMPARISON_METHOD: "contains",
         },
@@ -194,7 +194,7 @@ async def test_binary_sensor_calendar_unavailable(
         options={
             "name": "Test Unavailable",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
             CONF_MATCH_ATTRIBUTE: "summary",
             CONF_COMPARISON_METHOD: "contains",
         },
@@ -233,7 +233,7 @@ async def test_binary_sensor_state_change_listener(
         options={
             "name": "Test State Change",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
             CONF_MATCH_ATTRIBUTE: "summary",
             CONF_COMPARISON_METHOD: "contains",
         },
@@ -303,7 +303,7 @@ async def test_binary_sensor_default_comparison_method(
         options={
             "name": "Test Default",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
             # No CONF_COMPARISON_METHOD specified
         },
         title="Test Default",
@@ -504,7 +504,7 @@ async def test_binary_sensor_sets_summary_description_and_location_attributes(
         options={
             "name": "Test Attributes",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
             CONF_MATCH_ATTRIBUTE: "summary",
             CONF_COMPARISON_METHOD: "contains",
         },
@@ -617,7 +617,7 @@ async def test_binary_sensor_disabled_no_call_later(
         options={
             "name": "Test Disabled",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
             CONF_COMPARISON_METHOD: "contains",
             CONF_MATCH_ATTRIBUTE: "summary",
         },
@@ -676,7 +676,7 @@ async def test_binary_sensor_enabled_schedules_call_later(
         options={
             "name": "Test Enabled",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
             CONF_COMPARISON_METHOD: "contains",
             CONF_MATCH_ATTRIBUTE: "summary",
         },
@@ -737,7 +737,7 @@ async def test_binary_sensor_cancels_call_later_when_disabled(
         options={
             "name": "Test Cancel",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
             CONF_COMPARISON_METHOD: "contains",
             CONF_MATCH_ATTRIBUTE: "summary",
         },

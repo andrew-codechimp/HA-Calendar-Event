@@ -21,8 +21,8 @@ from .const import (
     ATTR_SUMMARY,
     CONF_CALENDAR_ENTITY_ID,
     CONF_COMPARISON_METHOD,
+    CONF_MATCH,
     CONF_MATCH_ATTRIBUTE,
-    CONF_SUMMARY,
 )
 
 
@@ -40,7 +40,7 @@ async def async_setup_entry(
 
     name: str | None = config_entry.options.get("name")
     calendar_entity: str = config_entry.options[CONF_CALENDAR_ENTITY_ID]
-    match: str = config_entry.options[CONF_SUMMARY]
+    match: str = config_entry.options[CONF_MATCH]
     match_attribute: str = config_entry.options.get(CONF_MATCH_ATTRIBUTE, "summary")
     comparison_method: str = config_entry.options.get(
         CONF_COMPARISON_METHOD, "contains"
