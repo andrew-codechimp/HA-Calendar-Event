@@ -89,8 +89,7 @@ async def test_config_flow(
     await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("version") == 1
-    assert result.get("minor_version") == 2
+    assert result.get("version") == 2
     assert result.get("title") == name
 
     assert result.get("options") == {

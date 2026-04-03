@@ -91,7 +91,6 @@ async def test_migrate_entry_summary_to_match(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
-        minor_version=1,
         data={},
         options={
             "name": DEFAULT_NAME,
@@ -106,7 +105,7 @@ async def test_migrate_entry_summary_to_match(hass: HomeAssistant) -> None:
 
     assert await async_migrate_entry(hass, config_entry)
 
-    assert config_entry.minor_version == 2
+    assert config_entry.version == 2
     assert config_entry.options[CONF_MATCH] == "Legacy Option Match"
     assert "summary" not in config_entry.options
     assert config_entry.data == {}

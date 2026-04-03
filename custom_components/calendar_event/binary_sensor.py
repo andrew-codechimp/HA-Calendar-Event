@@ -51,20 +51,18 @@ async def async_setup_entry(
         config_entry.add_update_listener(config_entry_update_listener)
     )
 
-    async_add_entities(
-        [
-            CalendarEventBinarySensor(
-                hass,
-                config_entry,
-                name,
-                unique_id,
-                calendar_entity,
-                match,
-                match_attribute,
-                comparison_method,
-            )
-        ]
-    )
+    async_add_entities([
+        CalendarEventBinarySensor(
+            hass,
+            config_entry,
+            name,
+            unique_id,
+            calendar_entity,
+            match,
+            match_attribute,
+            comparison_method,
+        )
+    ])
 
 
 class CalendarEventBinarySensor(BinarySensorEntity):
@@ -75,6 +73,12 @@ class CalendarEventBinarySensor(BinarySensorEntity):
     _attr_translation_key = "calendar_event"
 
     _state_dict: dict[str, str] = {}
+
+    _unrecorded_attributes = frozenset({
+        ATTR_SUMMARY,
+        ATTR_DESCRIPTION,
+        ATTR_LOCATION,
+    })
 
     def __init__(
         self,
@@ -178,35 +182,29 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
         if calendar_state is None or calendar_state.state == "off":
             self._attr_is_on = False
-            self._attr_extra_state_attributes.update(
-                {
-                    ATTR_SUMMARY: "",
-                    ATTR_DESCRIPTION: "",
-                    ATTR_LOCATION: "",
-                }
-            )
+            self._attr_extra_state_attributes.update({
+                ATTR_SUMMARY: "",
+                ATTR_DESCRIPTION: "",
+                ATTR_LOCATION: "",
+            })
             self.async_write_ha_state()
             return
 
         event = await self._get_event_matching_summary()
         if event:
             self._attr_is_on = True
-            self._attr_extra_state_attributes.update(
-                {
-                    ATTR_SUMMARY: event.get("summary", ""),
-                    ATTR_DESCRIPTION: event.get("description", ""),
-                    ATTR_LOCATION: event.get("location", ""),
-                }
-            )
+            self._attr_extra_state_attributes.update({
+                ATTR_SUMMARY: event.get("summary", ""),
+                ATTR_DESCRIPTION: event.get("description", ""),
+                ATTR_LOCATION: event.get("location", ""),
+            })
         else:
             self._attr_is_on = False
-            self._attr_extra_state_attributes.update(
-                {
-                    ATTR_SUMMARY: "",
-                    ATTR_DESCRIPTION: "",
-                    ATTR_LOCATION: "",
-                }
-            )
+            self._attr_extra_state_attributes.update({
+                ATTR_SUMMARY: "",
+                ATTR_DESCRIPTION: "",
+                ATTR_LOCATION: "",
+            })
 
         self.async_write_ha_state()
 
