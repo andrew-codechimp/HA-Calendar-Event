@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old config entries to newer versions."""
-    if config_entry.version == 1 and config_entry.minor_version < 2:
+    if config_entry.version < 2:
         options = dict(config_entry.options)
 
         if LEGACY_CONF_SUMMARY in options and CONF_MATCH not in options:
@@ -106,7 +106,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         hass.config_entries.async_update_entry(
             config_entry,
             options=options,
-            minor_version=2,
+            version=2,
         )
 
     return True
