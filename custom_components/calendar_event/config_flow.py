@@ -2,32 +2,41 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
 from collections.abc import Mapping
+from typing import Any, cast
 
 import voluptuous as vol
 
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaFlowFormStep,
     SchemaConfigFlowHandler,
+    SchemaFlowFormStep,
 )
 
 from .const import (
-    DOMAIN,
-    CONF_SUMMARY,
-    CONF_COMPARISON_METHOD,
     CONF_CALENDAR_ENTITY_ID,
+    CONF_COMPARISON_METHOD,
+    CONF_MATCH,
+    CONF_MATCH_ATTRIBUTE,
+    DOMAIN,
 )
 
 _COMPARISON_METHODS = ["contains", "starts_with", "ends_with", "exactly"]
+_MATCH_ATTRIBUTES = ["any", "summary", "description", "location"]
 
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CALENDAR_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="calendar")
         ),
-        vol.Required(CONF_SUMMARY): selector.TextSelector(),
+        vol.Required(CONF_MATCH): selector.TextSelector(),
+        vol.Required(CONF_MATCH_ATTRIBUTE, default="summary"): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=_MATCH_ATTRIBUTES,
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key=CONF_MATCH_ATTRIBUTE,
+            ),
+        ),
         vol.Required(
             CONF_COMPARISON_METHOD, default="contains"
         ): selector.SelectSelector(
@@ -65,8 +74,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 
-    VERSION = 1
-    MINOR_VERSION = 1
+    VERSION = 2
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

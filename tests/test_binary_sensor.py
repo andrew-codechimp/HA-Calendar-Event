@@ -1,14 +1,17 @@
 """The test for the calendar_event binary sensor platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from custom_components.calendar_event.const import (
-    DOMAIN,
-    CONF_SUMMARY,
     ATTR_DESCRIPTION,
-    CONF_COMPARISON_METHOD,
+    ATTR_LOCATION,
+    ATTR_SUMMARY,
     CONF_CALENDAR_ENTITY_ID,
+    CONF_COMPARISON_METHOD,
+    CONF_MATCH,
+    CONF_MATCH_ATTRIBUTE,
+    DOMAIN,
 )
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -41,40 +44,42 @@ async def mock_calendar_entity(hass: HomeAssistant, entity_registry: er.EntityRe
 
 @pytest.mark.parametrize(
     (
+        "match_attribute",
         "comparison_method",
-        "summary_text",
+        "match_text",
         "event_summary",
         "expected_match",
     ),
     [
         # Contains tests
-        ("contains", "meeting", "Team Meeting", True),
-        ("contains", "meeting", "Daily Standup", False),
-        ("contains", "doctor", "Doctors Appointment", True),
-        ("contains", "vacation", "Back from vacation", True),
-        ("contains", "party", "Birthday celebration", False),
+        ("summary", "contains", "meeting", "Team Meeting", True),
+        ("summary", "contains", "meeting", "Daily Standup", False),
+        ("summary", "contains", "doctor", "Doctors Appointment", True),
+        ("summary", "contains", "vacation", "Back from vacation", True),
+        ("summary", "contains", "party", "Birthday celebration", False),
         # Starts with tests
-        ("starts_with", "meeting", "Meeting with client", True),
-        ("starts_with", "meeting", "Team Meeting", False),
-        ("starts_with", "doctor", "Doctors visit", True),
-        ("starts_with", "appointment", "Doctor Appointment", False),
+        ("summary", "starts_with", "meeting", "Meeting with client", True),
+        ("summary", "starts_with", "meeting", "Team Meeting", False),
+        ("summary", "starts_with", "doctor", "Doctors visit", True),
+        ("summary", "starts_with", "appointment", "Doctor Appointment", False),
         # Ends with tests
-        ("ends_with", "meeting", "Daily Meeting", True),
-        ("ends_with", "meeting", "Meeting with boss", False),
-        ("ends_with", "appointment", "Doctor Appointment", True),
-        ("ends_with", "visit", "Doctor visit", True),
+        ("summary", "ends_with", "meeting", "Daily Meeting", True),
+        ("summary", "ends_with", "meeting", "Meeting with boss", False),
+        ("summary", "ends_with", "appointment", "Doctor Appointment", True),
+        ("summary", "ends_with", "visit", "Doctor visit", True),
         # Exactly tests
-        ("exactly", "meeting", "Meeting", True),
-        ("exactly", "meeting", "Team Meeting", False),
-        ("exactly", "doctor appointment", "Doctor Appointment", True),
-        ("exactly", "vacation", "Vacation time", False),
+        ("summary", "exactly", "meeting", "Meeting", True),
+        ("summary", "exactly", "meeting", "Team Meeting", False),
+        ("summary", "exactly", "doctor appointment", "Doctor Appointment", True),
+        ("summary", "exactly", "vacation", "Vacation time", False),
     ],
 )
 async def test_binary_sensor_matching_criteria(
     hass: HomeAssistant,
     mock_calendar_entity: er.RegistryEntry,
+    match_attribute: str,
     comparison_method: str,
-    summary_text: str,
+    match_text: str,
     event_summary: str,
     expected_match: bool,
 ) -> None:
@@ -87,7 +92,8 @@ async def test_binary_sensor_matching_criteria(
         options={
             "name": f"Test {comparison_method}",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: summary_text,
+            CONF_MATCH: match_text,
+            CONF_MATCH_ATTRIBUTE: match_attribute,
             CONF_COMPARISON_METHOD: comparison_method,
         },
         title=f"Test {comparison_method}",
@@ -145,7 +151,8 @@ async def test_binary_sensor_no_events(
         options={
             "name": "Test No Events",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
+            CONF_MATCH_ATTRIBUTE: "summary",
             CONF_COMPARISON_METHOD: "contains",
         },
         title="Test No Events",
@@ -187,7 +194,8 @@ async def test_binary_sensor_calendar_unavailable(
         options={
             "name": "Test Unavailable",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
+            CONF_MATCH_ATTRIBUTE: "summary",
             CONF_COMPARISON_METHOD: "contains",
         },
         title="Test Unavailable",
@@ -225,7 +233,8 @@ async def test_binary_sensor_state_change_listener(
         options={
             "name": "Test State Change",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
+            CONF_MATCH_ATTRIBUTE: "summary",
             CONF_COMPARISON_METHOD: "contains",
         },
         title="Test State Change",
@@ -294,7 +303,7 @@ async def test_binary_sensor_default_comparison_method(
         options={
             "name": "Test Default",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
             # No CONF_COMPARISON_METHOD specified
         },
         title="Test Default",
@@ -327,36 +336,253 @@ async def test_binary_sensor_default_comparison_method(
         assert binary_sensor_state.attributes.get(ATTR_DESCRIPTION) == "Default test"
 
 
+@pytest.mark.parametrize(
+    (
+        "match_attribute",
+        "comparison_method",
+        "match_text",
+        "event_data",
+        "expected_match",
+    ),
+    [
+        (
+            "description",
+            "contains",
+            "grocery",
+            {
+                "summary": "Team Meeting",
+                "description": "Grocery shopping run",
+                "location": "Downtown",
+            },
+            True,
+        ),
+        (
+            "description",
+            "contains",
+            "grocery",
+            {
+                "summary": "Team Meeting",
+                "description": "Weekly sync",
+                "location": "Downtown",
+            },
+            False,
+        ),
+        (
+            "location",
+            "starts_with",
+            "office",
+            {
+                "summary": "Team Meeting",
+                "description": "Weekly sync",
+                "location": "Office Room A",
+            },
+            True,
+        ),
+        (
+            "location",
+            "ends_with",
+            "room a",
+            {
+                "summary": "Team Meeting",
+                "description": "Weekly sync",
+                "location": "Office Room A",
+            },
+            True,
+        ),
+        (
+            "any",
+            "contains",
+            "headquarters",
+            {
+                "summary": "Team Meeting",
+                "description": "Weekly sync",
+                "location": "Main Headquarters",
+            },
+            True,
+        ),
+        (
+            "any",
+            "contains",
+            "grocery",
+            {
+                "summary": "Team Meeting",
+                "description": "Grocery shopping run",
+                "location": "Main Office",
+            },
+            True,
+        ),
+        (
+            "any",
+            "contains",
+            "meeting",
+            {
+                "summary": "Team Meeting",
+                "description": "Weekly sync",
+                "location": "Main Office",
+            },
+            True,
+        ),
+        (
+            "any",
+            "contains",
+            "dentist",
+            {
+                "summary": "Team Meeting",
+                "description": "Weekly sync",
+                "location": "Main Office",
+            },
+            False,
+        ),
+    ],
+)
+async def test_get_event_matching_summary_match_attribute(
+    hass: HomeAssistant,
+    mock_calendar_entity: er.RegistryEntry,
+    match_attribute: str,
+    comparison_method: str,
+    match_text: str,
+    event_data: dict[str, str],
+    expected_match: bool,
+) -> None:
+    """Test matching behavior for description, location, and any attributes."""
+    from custom_components.calendar_event.binary_sensor import CalendarEventBinarySensor
+
+    sensor = CalendarEventBinarySensor(
+        hass=hass,
+        config_entry=None,
+        name="Test",
+        unique_id="test",
+        calendar_entity_id=mock_calendar_entity.entity_id,
+        match=match_text,
+        match_attribute=match_attribute,
+        comparison_method=comparison_method,
+    )
+
+    event = {
+        **event_data,
+        "start": "2000-01-01T00:00:00+00:00",
+    }
+
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call",
+        AsyncMock(
+            return_value={
+                mock_calendar_entity.entity_id: {
+                    "events": [event],
+                }
+            }
+        ),
+    ) as mock_async_call:
+        result = await sensor._get_event_matching_summary()
+
+    if expected_match:
+        assert result == event
+    else:
+        assert result is None
+
+    mock_async_call.assert_awaited_once_with(
+        "calendar",
+        "get_events",
+        {
+            "entity_id": mock_calendar_entity.entity_id,
+            "end_date_time": ANY,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+
+async def test_binary_sensor_sets_summary_description_and_location_attributes(
+    hass: HomeAssistant,
+    mock_calendar_entity: er.RegistryEntry,
+) -> None:
+    """Test that matching events set all exposed state attributes."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "name": "Test Attributes",
+            CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
+            CONF_MATCH: "meeting",
+            CONF_MATCH_ATTRIBUTE: "summary",
+            CONF_COMPARISON_METHOD: "contains",
+        },
+        title="Test Attributes",
+    )
+
+    with patch(
+        "custom_components.calendar_event.binary_sensor.CalendarEventBinarySensor._get_event_matching_summary"
+    ) as mock_get_events:
+        mock_get_events.return_value = {
+            "summary": "Team Meeting",
+            "description": "Weekly team sync",
+            "location": "Board Room A",
+        }
+
+        await setup_integration(hass, config_entry)
+
+        binary_sensor_entity_id = "binary_sensor.test_attributes"
+
+        hass.states.async_set(
+            mock_calendar_entity.entity_id,
+            "on",
+            {
+                "message": "Team Meeting",
+                "description": "Weekly team sync",
+                "location": "Board Room A",
+            },
+        )
+        await hass.async_block_till_done()
+
+        binary_sensor_state = hass.states.get(binary_sensor_entity_id)
+        assert binary_sensor_state is not None
+        assert binary_sensor_state.state == "on"
+        assert binary_sensor_state.attributes.get(ATTR_SUMMARY) == "Team Meeting"
+        assert (
+            binary_sensor_state.attributes.get(ATTR_DESCRIPTION) == "Weekly team sync"
+        )
+        assert binary_sensor_state.attributes.get(ATTR_LOCATION) == "Board Room A"
+
+
 # Test the actual matching logic directly
 @pytest.mark.parametrize(
     (
+        "match_attribute",
         "comparison_method",
-        "summary_text",
+        "match_text",
         "event_summary",
         "expected_match",
     ),
     [
         # Contains tests
-        ("contains", "meeting", "Team Meeting", True),
-        ("contains", "MEET", "team meeting", True),  # Case insensitive
-        ("contains", "meeting", "Daily Standup", False),
+        ("summary", "contains", "meeting", "Team Meeting", True),
+        ("summary", "contains", "MEET", "team meeting", True),  # Case insensitive
+        ("summary", "contains", "meeting", "Daily Standup", False),
         # Starts with tests
-        ("starts_with", "meeting", "Meeting with client", True),
-        ("starts_with", "MEETING", "meeting with client", True),  # Case insensitive
-        ("starts_with", "meeting", "Team Meeting", False),
+        ("summary", "starts_with", "meeting", "Meeting with client", True),
+        (
+            "summary",
+            "starts_with",
+            "MEETING",
+            "meeting with client",
+            True,
+        ),  # Case insensitive
+        ("summary", "starts_with", "meeting", "Team Meeting", False),
         # Ends with tests
-        ("ends_with", "meeting", "Daily Meeting", True),
-        ("ends_with", "MEETING", "daily meeting", True),  # Case insensitive
-        ("ends_with", "meeting", "Meeting with boss", False),
+        ("summary", "ends_with", "meeting", "Daily Meeting", True),
+        ("summary", "ends_with", "MEETING", "daily meeting", True),  # Case insensitive
+        ("summary", "ends_with", "meeting", "Meeting with boss", False),
         # Exactly tests
-        ("exactly", "meeting", "Meeting", True),
-        ("exactly", "MEETING", "meeting", True),  # Case insensitive
-        ("exactly", "meeting", "Team Meeting", False),
+        ("summary", "exactly", "meeting", "Meeting", True),
+        ("summary", "exactly", "MEETING", "meeting", True),  # Case insensitive
+        ("summary", "exactly", "meeting", "Team Meeting", False),
     ],
 )
 def test_matches_criteria_logic(
+    match_attribute: str,
     comparison_method: str,
-    summary_text: str,
+    match_text: str,
     event_summary: str,
     expected_match: bool,
 ) -> None:
@@ -370,8 +596,9 @@ def test_matches_criteria_logic(
         name="Test",
         unique_id="test",
         calendar_entity_id="calendar.test",
-        summary=summary_text,
+        match=match_text,
         comparison_method=comparison_method,
+        match_attribute=match_attribute,
     )
 
     result = sensor._matches_criteria(event_summary)
@@ -390,8 +617,9 @@ async def test_binary_sensor_disabled_no_call_later(
         options={
             "name": "Test Disabled",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
             CONF_COMPARISON_METHOD: "contains",
+            CONF_MATCH_ATTRIBUTE: "summary",
         },
         title="Test Disabled",
     )
@@ -448,8 +676,9 @@ async def test_binary_sensor_enabled_schedules_call_later(
         options={
             "name": "Test Enabled",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
             CONF_COMPARISON_METHOD: "contains",
+            CONF_MATCH_ATTRIBUTE: "summary",
         },
         title="Test Enabled",
     )
@@ -508,8 +737,9 @@ async def test_binary_sensor_cancels_call_later_when_disabled(
         options={
             "name": "Test Cancel",
             CONF_CALENDAR_ENTITY_ID: mock_calendar_entity.entity_id,
-            CONF_SUMMARY: "meeting",
+            CONF_MATCH: "meeting",
             CONF_COMPARISON_METHOD: "contains",
+            CONF_MATCH_ATTRIBUTE: "summary",
         },
         title="Test Cancel",
     )

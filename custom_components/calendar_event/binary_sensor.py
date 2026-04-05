@@ -5,21 +5,24 @@ from __future__ import annotations
 from asyncio import Task, TimerHandle
 from datetime import timedelta
 
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.util import dt as dt_util
-from homeassistant.const import EVENT_STATE_CHANGED
-from homeassistant.util.dt import utcnow
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.event import async_track_entity_registry_updated_event
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_entity_registry_updated_event
+from homeassistant.util import dt as dt_util
+from homeassistant.util.dt import utcnow
 
 from .const import (
-    CONF_SUMMARY,
     ATTR_DESCRIPTION,
-    CONF_COMPARISON_METHOD,
+    ATTR_LOCATION,
+    ATTR_SUMMARY,
     CONF_CALENDAR_ENTITY_ID,
+    CONF_COMPARISON_METHOD,
+    CONF_MATCH,
+    CONF_MATCH_ATTRIBUTE,
 )
 
 
@@ -37,7 +40,8 @@ async def async_setup_entry(
 
     name: str | None = config_entry.options.get("name")
     calendar_entity: str = config_entry.options[CONF_CALENDAR_ENTITY_ID]
-    summary: str = config_entry.options[CONF_SUMMARY]
+    match: str = config_entry.options[CONF_MATCH]
+    match_attribute: str = config_entry.options.get(CONF_MATCH_ATTRIBUTE, "summary")
     comparison_method: str = config_entry.options.get(
         CONF_COMPARISON_METHOD, "contains"
     )
@@ -55,7 +59,8 @@ async def async_setup_entry(
                 name,
                 unique_id,
                 calendar_entity,
-                summary,
+                match,
+                match_attribute,
                 comparison_method,
             )
         ]
@@ -71,6 +76,14 @@ class CalendarEventBinarySensor(BinarySensorEntity):
 
     _state_dict: dict[str, str] = {}
 
+    _unrecorded_attributes = frozenset(
+        {
+            ATTR_SUMMARY,
+            ATTR_DESCRIPTION,
+            ATTR_LOCATION,
+        }
+    )
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -78,14 +91,16 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         name: str | None,
         unique_id: str | None,
         calendar_entity_id: str,
-        summary: str,
+        match: str,
+        match_attribute: str,
         comparison_method: str,
     ) -> None:
         """Initialize the Calendar Event sensor."""
         self._attr_unique_id = unique_id
         self._attr_name = name
         self._calendar_entity_id = calendar_entity_id
-        self._summary = summary
+        self._match = match
+        self._match_attribute = match_attribute
         self._comparison_method = comparison_method
         self._hass = hass
         self._config_entry = config_entry
@@ -173,7 +188,9 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             self._attr_is_on = False
             self._attr_extra_state_attributes.update(
                 {
+                    ATTR_SUMMARY: "",
                     ATTR_DESCRIPTION: "",
+                    ATTR_LOCATION: "",
                 }
             )
             self.async_write_ha_state()
@@ -184,14 +201,18 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             self._attr_is_on = True
             self._attr_extra_state_attributes.update(
                 {
+                    ATTR_SUMMARY: event.get("summary", ""),
                     ATTR_DESCRIPTION: event.get("description", ""),
+                    ATTR_LOCATION: event.get("location", ""),
                 }
             )
         else:
             self._attr_is_on = False
             self._attr_extra_state_attributes.update(
                 {
+                    ATTR_SUMMARY: "",
                     ATTR_DESCRIPTION: "",
+                    ATTR_LOCATION: "",
                 }
             )
 
@@ -214,23 +235,23 @@ class CalendarEventBinarySensor(BinarySensorEntity):
                 self._schedule_update,
             )
 
-    def _matches_criteria(self, event_summary: str) -> bool:
+    def _matches_criteria(self, event_field: str) -> bool:
         """Check if event summary matches the configured criteria."""
-        event_summary_lower = event_summary.casefold()
-        summary_lower = self._summary.casefold()
+        event_field_lower = event_field.casefold()
+        match_lower = self._match.casefold()
 
         if self._comparison_method == "contains":
-            return summary_lower in event_summary_lower
+            return match_lower in event_field_lower
         if self._comparison_method == "starts_with":
-            return event_summary_lower.startswith(summary_lower)
+            return event_field_lower.startswith(match_lower)
         if self._comparison_method == "ends_with":
-            return event_summary_lower.endswith(summary_lower)
+            return event_field_lower.endswith(match_lower)
         if self._comparison_method == "exactly":
-            return event_summary_lower == summary_lower
+            return event_field_lower == match_lower
         # Default to contains if unknown criteria
-        return summary_lower in event_summary_lower
+        return match_lower in event_field_lower
 
-    async def _get_event_matching_summary(self) -> dict | None:
+    async def _get_event_matching_summary(self) -> dict | None:  # noqa: PLR0911, PLR0912
         """Check if the summary is in the calendar events."""
 
         # Fetch all events for the calendar entity using the get_events service
@@ -262,6 +283,7 @@ class CalendarEventBinarySensor(BinarySensorEntity):
         calendar_events = calendar_data.get("events", [])
         if not isinstance(calendar_events, list):
             return None
+
         for event in calendar_events:
             if not isinstance(event, dict):
                 continue
@@ -276,8 +298,33 @@ class CalendarEventBinarySensor(BinarySensorEntity):
             except (ValueError, TypeError):
                 continue
             if start_dt <= utcnow():
-                summary = event.get("summary", "")
-                if isinstance(summary, str) and self._matches_criteria(summary):
-                    return event
+                summary = event.get("summary")
+                description = event.get("description")
+                location = event.get("location")
 
+                if self._match_attribute == "any":
+                    if any(
+                        self._matches_criteria(attr)
+                        for attr in [summary, description, location]
+                        if isinstance(attr, str)
+                    ):
+                        return event
+                elif (
+                    (
+                        self._match_attribute == "summary"
+                        and isinstance(summary, str)
+                        and self._matches_criteria(summary)
+                    )
+                    or (
+                        self._match_attribute == "description"
+                        and isinstance(description, str)
+                        and self._matches_criteria(description)
+                    )
+                    or (
+                        self._match_attribute == "location"
+                        and isinstance(location, str)
+                        and self._matches_criteria(location)
+                    )
+                ):
+                    return event
         return None

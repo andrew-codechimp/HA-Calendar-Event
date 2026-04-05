@@ -9,9 +9,9 @@
 
 Calendar event helper for Home Assistant
 
-Allows creation of binary sensor helpers that look at the summary of the currently active events for a calendar, turning the sensor on if the summary matches that configured in the helper.
+Allows creation of binary sensor helpers that look at the attributes of the currently active events for a calendar, turning the sensor on if the selected attribute matches that configured in the helper.
 
-The description of the calendar event is available as an attribute within the helper.
+The summary, description and location of the calendar event are available as attributes within the helper.
 
 Using the built-in calendar state within a template does not handle multiple events at the same time; it is on if any event is active and the message attribute only displays one of the events, or an upcoming event, making it very hard to use in a dashboard.
 

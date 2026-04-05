@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 from custom_components.calendar_event.const import (
+    CONF_MATCH,
     DOMAIN,
 )
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
-    label_registry as lr,
     device_registry as dr,
     entity_registry as er,
+    label_registry as lr,
 )
-from homeassistant.config_entries import ConfigEntryState
 
 from .const import DEFAULT_NAME
 
@@ -65,7 +66,7 @@ async def test_setup(
         options={
             "name": DEFAULT_NAME,
             "calendar_entity_id": source_entity.entity_id,
-            "summary": "Test Event",
+            "match": "Test Event",
             "comparison_method": "contains",
         },
         title=DEFAULT_NAME,
@@ -81,3 +82,30 @@ async def test_setup(
     # Remove the config entry
     assert await hass.config_entries.async_remove(calendar_event_config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_migrate_entry_summary_to_match(hass: HomeAssistant) -> None:
+    """Test migration renames legacy summary option key to match."""
+    from custom_components.calendar_event import async_migrate_entry
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        data={},
+        options={
+            "name": DEFAULT_NAME,
+            "calendar_entity_id": "calendar.my_calendar",
+            "summary": "Legacy Option Match",
+            "comparison_method": "contains",
+            "match_attribute": "summary",
+        },
+        title=DEFAULT_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await async_migrate_entry(hass, config_entry)
+
+    assert config_entry.version == 2
+    assert config_entry.options[CONF_MATCH] == "Legacy Option Match"
+    assert "summary" not in config_entry.options
+    assert config_entry.data == {}

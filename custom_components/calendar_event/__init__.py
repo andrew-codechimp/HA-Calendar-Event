@@ -9,22 +9,25 @@ from __future__ import annotations
 import voluptuous as vol
 from awesomeversion.awesomeversion import AwesomeVersion
 
-from homeassistant.core import HomeAssistant
-from homeassistant.const import __version__ as HA_VERSION  # noqa: N812
-from homeassistant.helpers import entity_registry as er, config_validation as cv
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.const import __version__ as HA_VERSION  # noqa: N812
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_CALENDAR_ENTITY_ID,
+    CONF_MATCH,
+    CONF_MATCH_ATTRIBUTE,
     DOMAIN,
     LOGGER,
-    PLATFORMS,
     MIN_HA_VERSION,
-    CONF_CALENDAR_ENTITY_ID,
+    PLATFORMS,
 )
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+LEGACY_CONF_SUMMARY = "summary"
 
 
 async def async_setup(
@@ -86,6 +89,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old config entries to newer versions."""
+    if config_entry.version < 2:
+        options = dict(config_entry.options)
+
+        if LEGACY_CONF_SUMMARY in options and CONF_MATCH not in options:
+            options[CONF_MATCH] = options.pop(LEGACY_CONF_SUMMARY)
+
+        options[CONF_MATCH_ATTRIBUTE] = "summary"
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            options=options,
+            version=2,
+        )
 
     return True
 

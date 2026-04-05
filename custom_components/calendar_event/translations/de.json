@@ -5,15 +5,17 @@
                 "title": "Create Calendar Event",
                 "description": "Create a binary sensor that is on if the calendar event meets the criteria.",
                 "data": {
-                    "name": "Name",
                     "calendar_entity_id": "Calendar",
-                    "summary": "Summary",
-                    "comparison_method": "Comparison Method"
+                    "comparison_method": "Comparison method",
+                    "name": "Name",
+                    "match_attribute": "Attribute to match",
+                    "match": "Text"
                 },
                 "data_description": {
                     "calendar_entity_id": "The calendar entity to monitor for events.",
-                    "summary": "The text to match against in calendar event summaries. Matching is case-insensitive.",
-                    "comparison_method": "How to match the summary text."
+                    "comparison_method": "How to match the attribute.",
+                    "match_attribute": "The attribute of the calendar event to match against.",
+                    "match": "The text to match against in the calendar event. Matching is case-insensitive."
                 }
             }
         }
@@ -25,18 +27,28 @@
                 "description": "Configure the calendar event options.",
                 "data": {
                     "calendar_entity_id": "Calendar",
-                    "summary": "Summary",
-                    "comparison_method": "Comparison Method"
+                    "comparison_method": "Comparison method",
+                    "match_attribute": "Attribute to match",
+                    "match": "Text"
                 },
                 "data_description": {
                     "calendar_entity_id": "The calendar entity to monitor for events.",
-                    "summary": "The text to match against in calendar event summaries. Matching is case-insensitive.",
-                    "comparison_method": "How to match the summary text."
+                    "comparison_method": "How to match the attribute.",
+                    "match_attribute": "The attribute of the calendar event to match against.",
+                    "match": "The text to match against in the calendar event. Matching is case-insensitive."
                 }
             }
         }
     },
     "selector": {
+        "match_attribute": {
+            "options": {
+                "any": "Any",
+                "description": "Description",
+                "location": "Location",
+                "summary": "Summary"
+            }
+        },
         "comparison_method": {
             "options": {
                 "contains": "Contains",

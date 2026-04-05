@@ -5,8 +5,8 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.calendar_event.binary_sensor import CalendarEventBinarySensor
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -35,7 +35,8 @@ async def test_timer_cancelled_when_entity_disabled_directly(
         name="Test",
         unique_id="test_id",
         calendar_entity_id="calendar.test",
-        summary="Test",
+        match="Test",
+        match_attribute="summary",
         comparison_method="contains",
     )
 
@@ -78,7 +79,8 @@ async def test_timer_not_scheduled_when_disabled(hass: HomeAssistant) -> None:
         name="Test",
         unique_id="test_id",
         calendar_entity_id="calendar.test",
-        summary="Test",
+        match="Test",
+        match_attribute="summary",
         comparison_method="contains",
     )
 
@@ -120,7 +122,8 @@ async def test_timer_cancelled_in_state_changed_when_disabled(
         name="Test",
         unique_id="test_id",
         calendar_entity_id="calendar.test",
-        summary="Test",
+        match="Test",
+        match_attribute="summary",
         comparison_method="contains",
     )
 
