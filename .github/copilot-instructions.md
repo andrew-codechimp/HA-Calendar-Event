@@ -18,9 +18,7 @@ Binary sensors use **event-driven state monitoring**:
 ```python
 # In binary_sensor.py - key pattern for state listeners
 self.async_on_remove(
-    self._hass.bus.async_listen(
-        EVENT_STATE_CHANGED, self._calendar_state_changed
-    )
+    self._hass.bus.async_listen(EVENT_STATE_CHANGED, self._calendar_state_changed)
 )
 ```
 Sensors check calendar entity's `message` attribute against configured `summary` text using case-insensitive partial matching.
