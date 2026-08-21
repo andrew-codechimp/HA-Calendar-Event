@@ -1,9 +1,15 @@
 """Tests for calendar_event integration."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.core import HomeAssistant
+
+if TYPE_CHECKING:
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 pytestmark = pytest.mark.asyncio
 
