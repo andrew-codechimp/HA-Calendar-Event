@@ -40,14 +40,14 @@ scripts/setup      # Installs all dependencies
 
 ### Testing
 ```bash
-pytest tests/                                                    # All tests
-pytest --cov-report term-missing --cov=custom_components.calendar_event tests  # With coverage
-pytest tests/test_binary_sensor.py -k test_state_sensor          # Specific test
+uv run --no-sync pytest tests/                                                    # All tests
+uv run --no-sync pytest --cov-report term-missing --cov=custom_components.calendar_event tests  # With coverage
+uv run --no-sync uv run --no-sync pytest tests/test_binary_sensor.py -k test_matching_methods          # Specific test
 ```
 
 ### Key Development Files
 - **`config/configuration.yaml`** - Test HA config with debug logging enabled
-- **`.vscode/tasks.json`** - VS Code task for running HA (port 8123)
+- **`.vscode/tasks.json`** - VS Code tasks for running HA and tests, including coverage and the current test file
 - **`pyproject.toml`** - Ruff, pytest, and poetry configuration
 
 ## Code Patterns & Conventions

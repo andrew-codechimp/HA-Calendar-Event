@@ -1,22 +1,28 @@
-"""Tests for calendar_event integration."""
+"""Helpers for Calendar Event tests."""
 
-from __future__ import annotations
+from datetime import timedelta
 
-from typing import TYPE_CHECKING
-
-import pytest
+from freezegun.api import FrozenDateTimeFactory
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from homeassistant.core import HomeAssistant
-
-if TYPE_CHECKING:
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-pytestmark = pytest.mark.asyncio
+from homeassistant.util import dt as dt_util
 
 
 async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
-    """Fixture for setting up the component."""
+    """Load the helper from a config entry."""
     config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
+
+async def advance_time(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, seconds: int
+) -> None:
+    """Advance the clock and run due timer callbacks."""
+    freezer.tick(timedelta(seconds=seconds))
+    async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
