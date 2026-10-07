@@ -2,35 +2,61 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run Home Assistant on port 8123",
+            "label": "Tests: All with Coverage",
             "type": "shell",
-            "command": "scripts/develop",
-            "problemMatcher": []
-        },
-        {
-            "label": "Run Tests",
-            "type": "shell",
-            "command": "uv run pytest tests/ -v",
+            "command": "uv run --no-sync pytest tests --cov=custom_components.calendar_event --cov-report=term-missing --cov-report=html",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
             "group": {
                 "kind": "test",
                 "isDefault": true
             },
-            "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
-                "panel": "new"
+                "panel": "dedicated"
             }
         },
         {
-            "label": "Run Tests with Coverage",
+            "label": "Tests: Current File",
             "type": "shell",
-            "command": "uv run pytest tests/ --cov=custom_components.calendar_event --cov-report=term-missing -v",
-            "group": "test",
+            "command": "uv run --no-sync pytest \"${file}\" -v",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "test",
+                "isDefault": false
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Tests: All",
+            "type": "shell",
+            "command": "uv run --no-sync pytest tests -v",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "problemMatcher": [],
             "presentation": {
                 "reveal": "always",
-                "panel": "new"
+                "panel": "dedicated"
+            },
+            "group": {
+                "kind": "test",
+                "isDefault": false
             }
+        },
+        {
+            "label": "Run Home Assistant on port 8123",
+            "type": "shell",
+            "command": "scripts/develop",
+            "problemMatcher": []
         },
         {
             "label": "Run Mypy",
