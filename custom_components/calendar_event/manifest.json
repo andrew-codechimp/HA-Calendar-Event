@@ -1,6 +1,7 @@
 {
   "domain": "calendar_event",
   "name": "Calendar Event",
+  "categories": [ "helpers" ],
   "codeowners": [
     "@andrew-codechimp"
   ],
