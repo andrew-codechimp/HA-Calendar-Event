@@ -18,7 +18,8 @@ Using the built-in calendar state within a template does not handle multiple eve
 Calendar Event helpers detect when a calendar state is on, and while it's on they will locally compare all current events every minute against the criteria specified, allowing for multiple calendar events to overlap within the same calendar. They will not refresh external calendars such as CalDAV; that schedule is determined by the integration for the calendar.
 
 
-_Please :star: this repo if you find it useful_  
+_Please ⭐ this repo on [GitHub][repository] if you find it useful_
+
 _If you want to show your support please_
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/yellow_img.png)](https://www.buymeacoffee.com/codechimp)
@@ -90,6 +91,7 @@ Create an [Issue](https://github.com/andrew-codechimp/HA-Calendar-Event/issues/)
 
 ---
 
+[repository]: https://github.com/andrew-codechimp/HA-Calendar-Event
 [commits-shield]: https://img.shields.io/github/commit-activity/y/andrew-codechimp/HA-Calendar-Event.svg?style=for-the-badge
 [commits]: https://github.com/andrew-codechimp/HA-Calendar-Event/commits/main
 [hacs]: https://github.com/hacs/integration
