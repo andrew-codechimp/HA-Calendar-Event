@@ -26,28 +26,15 @@ _If you want to show your support please_
 
 ![Helper Creation](https://raw.githubusercontent.com/andrew-codechimp/ha-calendar-event/main/images/screenshot.png "Helper Creation")
 
-## Installation
-
-### HACS
+## Marketplace/HACS Installation
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=andrew-codechimp&repository=HA-Calendar-Event&category=Integration)
 
-Restart Home Assistant
+Or search for Calendar Event within Marketplace/HACS if My Home Assistant does not work for you.
+
+Restart Home Assistant if using HACS
 
 In the HA UI go to "Configuration" -> "Devices & services" -> "Helpers" click "+" and select "Calendar Event"
-
-### Manual Installation
-
-<details>
-<summary>Show detailed instructions</summary>
-
-Installation via HACS is recommended, but a manual setup is supported.
-
-1. Manually copy custom_components/calendar_event folder from latest release to custom_components folder in your config folder.
-1. Restart Home Assistant.
-1. In the HA UI go to "Configuration" -> "Devices & services" -> "Helpers" click "+" and select "Calendar Event"
-
-</details>
 
 ## Usage
 
