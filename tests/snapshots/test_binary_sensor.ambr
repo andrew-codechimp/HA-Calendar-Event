@@ -40,7 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': '',
-      'friendly_name': 'My Calendar Event',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Calendar Event',
       'location': '',
       'summary': '',
     }),
