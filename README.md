@@ -1,12 +1,14 @@
+<!-- ha-marketplace:exclude-start -->
 # Calendar Event
 
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
 [![Downloads][download-latest-shield]]()
-[![HACS Installs][hacs-installs-shield]]()
+[![Installs][marketplace-installs-shield]][hacs-install]
+[![marketplace][marketplacebadge]][marketplace]
 [![License][license-shield]](LICENSE)
-[![hacs][hacsbadge]][hacs]
 
+<!-- ha-marketplace:exclude-end -->
 Calendar event helper for Home Assistant
 
 Allows creation of binary sensor helpers that look at the attributes of the currently active events for a calendar, turning the sensor on if the selected attribute matches that configured in the helper.
@@ -26,6 +28,7 @@ _If you want to show your support please_
 
 ![Helper Creation](https://raw.githubusercontent.com/andrew-codechimp/ha-calendar-event/main/images/screenshot.png "Helper Creation")
 
+<!-- ha-marketplace:exclude-start -->
 ## Marketplace/HACS Installation
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=andrew-codechimp&repository=HA-Calendar-Event&category=Integration)
@@ -35,6 +38,7 @@ Or search for Calendar Event within Marketplace/HACS if My Home Assistant does n
 Restart Home Assistant if using HACS
 
 In the HA UI go to "Configuration" -> "Devices & services" -> "Helpers" click "+" and select "Calendar Event"
+<!-- ha-marketplace:exclude-end -->
 
 ## Usage
 
@@ -88,4 +92,8 @@ Create an [Issue](https://github.com/andrew-codechimp/HA-Calendar-Event/issues/)
 [releases-shield]: https://img.shields.io/github/release/andrew-codechimp/HA-Calendar-Event.svg?style=for-the-badge
 [releases]: https://github.com/andrew-codechimp/HA-Calendar-Event/releases
 [download-latest-shield]: https://img.shields.io/github/downloads/andrew-codechimp/HA-Calendar-Event/latest/total?style=for-the-badge
-[hacs-installs-shield]: https://img.shields.io/endpoint.svg?url=https%3A%2F%2Flauwbier.nl%2Fhacs%2Fcalendar_event&style=for-the-badge
+[marketplace-installs-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fanalytics.home-assistant.io%2Fcustom_integrations.json&query=%24.calendar_event.total&style=for-the-badge&label=Marketplace%20installs
+[marketplace-install]: https://my.home-assistant.io/redirect/marketplace_repository/?owner=andrew-codechimp&repository=calendar_event&category=integration
+[hacs-install]: https://my.home-assistant.io/redirect/hacs_repository/?owner=andrew-codechimp&repository=HA-Calendar-Event&category=Integration
+[marketplace]: https://home-assistant.io/integrations/marketplace
+[marketplacebadge]: https://img.shields.io/badge/Marketplace-Default-41BDF5.svg?style=for-the-badge
